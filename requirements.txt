@@ -1,0 +1,5 @@
+pandas>=2.0.0
+pytest>=7.0.0
+# tzdata is required on systems without a system timezone database (Windows).
+# macOS/Linux typically ship with /usr/share/zoneinfo; tzdata is a safe fallback.
+tzdata>=2023.3

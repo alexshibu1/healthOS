@@ -1,0 +1,9 @@
+[project]
+name = "health-os"
+version = "0.1.0"
+requires-python = ">=3.9"   # zoneinfo is stdlib from 3.9; ZoneInfo requires tzdata on some systems
+
+[tool.pytest.ini_options]
+# adds project root to sys.path so `from src.ingest...` works without install
+pythonpath = ["."]
+testpaths  = ["tests"]
