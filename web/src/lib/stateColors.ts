@@ -28,7 +28,8 @@ interface ColorBundle {
   border: string;
   dot: string;
   ring: string;
-  spark: string;
+  spark: string; // hex (for SVG/recharts)
+  sparkFaded: string; // hex with low alpha (for gradient stop)
 }
 
 export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
@@ -40,7 +41,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-green",
     dot: "bg-state-green",
     ring: "ring-state-green",
-    spark: "#16a34a",
+    spark: "#10b981",
+    sparkFaded: "rgba(16, 185, 129, 0.55)",
   },
   amber: {
     text: "text-state-amber",
@@ -50,7 +52,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-amber",
     dot: "bg-state-amber",
     ring: "ring-state-amber",
-    spark: "#d97706",
+    spark: "#f59e0b",
+    sparkFaded: "rgba(245, 158, 11, 0.55)",
   },
   red: {
     text: "text-state-red",
@@ -60,7 +63,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-red",
     dot: "bg-state-red",
     ring: "ring-state-red",
-    spark: "#dc2626",
+    spark: "#ef4444",
+    sparkFaded: "rgba(239, 68, 68, 0.55)",
   },
   blue: {
     text: "text-state-blue",
@@ -70,7 +74,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-blue",
     dot: "bg-state-blue",
     ring: "ring-state-blue",
-    spark: "#2563eb",
+    spark: "#0ea5e9",
+    sparkFaded: "rgba(14, 165, 233, 0.55)",
   },
   purple: {
     text: "text-state-purple",
@@ -80,7 +85,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-purple",
     dot: "bg-state-purple",
     ring: "ring-state-purple",
-    spark: "#7c3aed",
+    spark: "#8b5cf6",
+    sparkFaded: "rgba(139, 92, 246, 0.55)",
   },
   rose: {
     text: "text-state-rose",
@@ -90,7 +96,8 @@ export const COLOR_TOKENS: Record<StateColor, ColorBundle> = {
     border: "border-state-rose",
     dot: "bg-state-rose",
     ring: "ring-state-rose",
-    spark: "#e11d48",
+    spark: "#f43f5e",
+    sparkFaded: "rgba(244, 63, 94, 0.55)",
   },
 };
 

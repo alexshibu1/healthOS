@@ -320,7 +320,7 @@ function ExpandButton({
           ? `Collapse ${label} details`
           : `Explain ${label} in detail`
       }
-      className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-subtle transition-colors hover:bg-paper-tinted hover:text-ink"
+      className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-paper-tinted hover:text-ink"
     >
       <span aria-hidden className="text-[14px] leading-none">
         {isExpanded ? "−" : "ⓘ"}
@@ -397,7 +397,7 @@ function ExpanderSection({
 }) {
   return (
     <div className="mb-4 last:mb-0">
-      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-ink-subtle">
+      <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-subtle">
         {title}
       </div>
       {children}

@@ -1,0 +1,9 @@
+# Hand-edited static profile. Scorers read age/sex/anthropometrics/goals here.
+# No derived metrics — compute baselines from observations elsewhere.
+
+age: 21
+sex: male
+weight_kg: 72
+height_cm: 178
+primary_training_modality: running
+primary_goal: longevity

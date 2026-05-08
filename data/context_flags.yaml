@@ -1,0 +1,11 @@
+# Hand-edited contextual windows (illness, travel, injury).
+# Scorers call get_active_flags(date) once per scoring day.
+
+illness_windows:
+  - start: "2025-06-08"
+    end: "2025-06-29"
+    note: "food poisoning, panel drawn 2025-06-15"
+
+travel_windows: [] # add as you remember them, or leave empty
+
+injury_windows: []
