@@ -7,7 +7,7 @@ Personal health intelligence layer. Ingests messy multi-source data
 a monthly report with a composite readiness score, a bio-age proxy,
 and a ranked top-3 of 80/20 interventions.
 
-The wedge: no consumer device sees all my data. This does.
+The wedge: no consumer device sees all my data. This does. and is able to derive even mreo insights becuz of that
 
 ## Data sources and quirks
 
@@ -22,6 +22,24 @@ The wedge: no consumer device sees all my data. This does.
 - Composite readiness = f(HRV trend, RHR trend, sleep debt, strain balance, subjective).
 - Bio-age proxy is illustrative, not medical. Be honest about uncertainty.
 - Single headline number. Drill-downs underneath.
+
+## Differentiator
+
+This project's wedge is fusing data sources no consumer app combines:
+
+- CBC differential (NLR, monocytes) — no wearable ingests this
+- Wearable HRV — every wearable has it, none ties to inflammatory markers
+- Workout pace/HR (Strava) — TrainingPeaks computes EF/decoupling but it's coach-facing
+- Sleep timestamps — Phillips SRI is peer-reviewed but no consumer app implements it
+
+Three flagship metrics define the product:
+
+1. NLR × HRV Training-Readiness Score
+2. Sleep Regularity Index (Phillips formula)
+3. Aerobic Decoupling Trend (Pa:HR Z-score)
+
+Full physiological reasoning lives in skills/health-reasoning.md.
+Implementation specs live in src/score/specs/.
 
 ## Guardrails
 
@@ -40,8 +58,3 @@ The wedge: no consumer device sees all my data. This does.
 - src/report/ — monthly report generator
 - skills/ — domain skills (see skills/health-reasoning.md)
 - evals/ — labeled days, divergence analysis
-
-## Eval criteria
-
-The score is good if it correlates with my felt-recovery on 15 labeled days
-(see evals/labeled-days.md). Divergences must be explainable.
