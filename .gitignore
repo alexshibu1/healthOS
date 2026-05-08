@@ -1,2 +1,5 @@
 rawdata/
 data/personal/
+
+# Claude Code local worktrees / agent scratch (not project source)
+.claude/
