@@ -1,3 +1,8 @@
+/* Editorial display — used for headlines, hero numerals, state names */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap");
+/* Data / labels — used for technical readouts, deltas, monospaced annotations */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+/* Body text */
 @import url("https://rsms.me/inter/inter.css");
 
 @tailwind base;
@@ -6,10 +11,11 @@
 
 :root {
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  color-scheme: light;
 }
 
 @supports (font-variation-settings: normal) {
@@ -21,9 +27,20 @@
 html,
 body,
 #root {
-  height: 100%;
-  background: #f8fafc;
-  color: #0f172a;
+  min-height: 100%;
+  color: #16140f;
+}
+
+body {
+  /* warm paper canvas — single soft radial bloom replaces the dot grid;
+     less noise, more atmosphere. */
+  background-color: #fbfaf7;
+  background-image: radial-gradient(
+    ellipse 80% 45% at 50% -10%,
+    rgba(180, 145, 90, 0.06) 0%,
+    transparent 60%
+  );
+  background-attachment: fixed;
 }
 
 button {
@@ -32,11 +49,33 @@ button {
 }
 
 button:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: 1.5px solid #16140f;
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Newsreader display headers — opt-in via .display class for finer control */
+.display {
+  font-family:
+    "Newsreader",
+    ui-serif,
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-feature-settings:
+    "ss01",
+    "cv11";
+}
+
+.display-italic {
+  font-family:
+    "Newsreader",
+    ui-serif,
+    Georgia,
+    serif;
+  font-style: italic;
 }

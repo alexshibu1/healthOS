@@ -49,14 +49,18 @@ from src.ingest.amazfit.body_loader     import load as load_body
 from src.ingest.amazfit.activity_loader import load as load_activity
 from src.ingest.strava.loader           import load as load_strava
 from src.ingest.jefit.workout_loader    import load as load_jefit
+from src.ingest.blood_panels.loader import (
+    load as load_blood_panel,
+    raise_if_blood_panel_frontmatter_rejected,
+)
 
 
 # Metric kinds that are treated as episodic (not filtered by --since).
 # Scorer needs full history for these to compute anchors / last-known values.
 _EPISODIC_METRIC_KINDS = frozenset({
     "body_weight",
-    # blood_panel observations will be added here when the blood_panel loader
-    # is implemented (see NOTE below).
+    "blood_panel_draw",
+    "blood_panel_analyte",
 })
 
 
@@ -122,13 +126,13 @@ def load_all(
     obs, rej  = load_jefit(jefit_csv, rawdata_root=root)
     _collect(all_obs, all_rejects, obs, rej, "jefit")
 
-    # ── NOTE: blood_panel loader not yet implemented ───────────────────────────
-    # rawdata/blood_panels/2025_food_poisoning_panel.md is a markdown file, not
-    # CSV. It does not fit the DictReader pattern used by the other loaders.
-    # A dedicated blood_panel_loader.py with a markdown parser (or a converted
-    # CSV export) must be specced and implemented separately.
-    # When ready, add here and include metric_kind="blood_panel_draw" /
-    # "blood_panel_analyte" in _EPISODIC_METRIC_KINDS.
+    # ── Blood panels (markdown under rawdata/blood_panels/*.md) ───────────────
+    panel_dir = root / "blood_panels"
+    if panel_dir.is_dir():
+        for md_path in sorted(panel_dir.glob("*.md")):
+            bp_obs, bp_rej = load_blood_panel(md_path, rawdata_root=root)
+            raise_if_blood_panel_frontmatter_rejected(md_path, bp_rej)
+            _collect(all_obs, all_rejects, bp_obs, bp_rej, "blood_panels")
 
     # ── split episodic vs time-series ─────────────────────────────────────────
     episodic:    list[Observation] = []
