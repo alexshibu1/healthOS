@@ -15,14 +15,17 @@ a score normalized *within* that state. You cannot collapse "deload because NLR
 is elevated while HRV is recovering" and "deload because everything is degraded"
 into the same number without destroying the interpretation.
 
-**Insufficient-data gate (before §4.1):** If all three flagship lenses (C1 NLR×HRV,
-C2 SRI, C3 aerobic decoupling) return **unknown** — i.e. each lens has no usable
-classification band — the composite must **not** fall through to a nominal state
-such as `recovered`. Output **`insufficient_data`** instead: score **0** (band
-0–0), confidence fixed at **0.3** (floor), primary signal **`convergent`**, empty
-divergence flags, and a deterministic reasoning string stating how many of three
-lenses were unknown and naming stale CBC age (when provided via C1 meta) vs.
-insufficient HRV baseline as common causes. This is a structural coverage rule,
+**Insufficient-data gate (before §4.1):** If **C1 NLR×HRV** (the wedge / flagship
+inflammatory × autonomic fuse) has **unknown** `tier`, the composite must **not**
+fall through to a nominal state such as `accumulating-fatigue` or `recovered` on
+the strength of SRI or aerobic decoupling alone. Output **`insufficient_data`**
+instead: score **0** (band 0–0), confidence fixed at **0.3** (floor), primary
+signal **`nlr_hrv`**, empty divergence flags, and a deterministic reasoning
+string that (1) states the wedge is missing, (2) optionally lists C1
+`quality_flags` and `cbc_age_days` from meta when present, and (3) when C2/C3
+still have bands, explicitly says those lenses are **supportive only** and do
+not complete the wedge. When C2 and C3 are also unknown, the reasoning also
+cites the all-three-unknown situation. This is a structural **coverage** rule,
 not a threshold retune.
 
 ## 2. Inputs
@@ -88,7 +91,7 @@ Eight states, ordered from most to least training-restricting:
 
 | state | meaning | primary action implication |
 |---|---|---|
-| `insufficient_data` | No flagship lens produced a usable band (all unknown) | Do not interpret readiness numerically; restore CBC recency and wearable/HRV coverage |
+| `insufficient_data` | NLR×HRV (wedge) **unknown** — or all three lenses unknown (subset of the same gate) | Do not interpret headline readiness numerically; restore CBC + wake-HRV coverage for the wedge |
 | `illness-risk` | Active illness context + systemic strain | Stop training; investigate illness |
 | `deload` | Multiple systems degraded or C1 in deload (convergent) | Cap volume; no high-intensity |
 | `accumulating-fatigue` | Trending toward deload; one or two systems moderate | Reduce load; monitor for 3–5 days |
@@ -99,15 +102,16 @@ Eight states, ordered from most to least training-restricting:
 
 ### 4.1 State decision rules (checked in priority order)
 
-**Rule 0 — insufficient_data (all flagship lenses unknown):**
+**Rule 0 — insufficient_data (wedge / C1 unknown):**
 ```
 C1.tier == "unknown"
-AND C2.regularity_band == "unknown"
-AND C3.decoupling_band == "unknown"
-→ state insufficient_data, score 0, confidence 0.3, primary_signal = "convergent"
-(reasoning template fixed in implementation — cites count of unknown lenses and CBC age when present)
+→ state insufficient_data, score 0, confidence 0.3, primary_signal = "nlr_hrv"
+(empty divergence flags; reasoning cites wedge absence, optional C1 flags / CBC age,
+ and either “all three unknown” or “C2/C3 may still have bands; not a substitute”)
 ```
-Checked **before** Rule 1. Does not apply when any lens has a non-unknown band.
+Checked **before** Rule 1. **C1 must be non-unknown** before any other state
+(illness-risk, deload, …) can apply. SRI and aerobic decoupling **cannot** carry
+a headline training-readiness state without the NLR×HRV tier.
 
 **Rule 1 — illness-risk:**
 ```
@@ -159,7 +163,7 @@ primary_signal = "context"
 
 **Rule 7 — recovered (default for all-green):**
 ```
-C1.tier ∈ {green, unknown}
+C1.tier == "green"   (C1 "unknown" is impossible here — Rule 0 exits first)
 AND C2.regularity_band ∈ {high, moderate, unknown}
 AND C3.decoupling_band ∈ {good, unknown}
 primary_signal = "nlr_hrv"  (or "convergent" if both C1 and C2 explicitly high)

@@ -1,20 +1,20 @@
 {
-  "state": "accumulating-fatigue",
-  "score": 38,
+  "state": "insufficient_data",
+  "score": 0,
   "todayDelta": {
     "value": 0.0,
     "unit": "pts",
     "vs": "yesterday"
   },
-  "subline": "NLR×HRV absent — Insufficient wake HRV history for baseline window. State: accumulating-fatigue (score 38/100). Insufficient HRV baseline: 0 valid day(s) (need 7). Spec §4.4: hrv_baseline_insufficient.",
-  "action": "Pull volume for 72h; favour sleep anchors before reassessing strain.",
-  "todayReasoning": "State: accumulating-fatigue (score 38/100). Primary signal: convergent (NLR×HRV=unknown, SRI=irregular, EF=unknown). Confidence: 0.1%. Action: Reduce load; monitor for 3–5 days before reassessing.",
+  "subline": "NLR×HRV absent — Insufficient wake HRV history for baseline window. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone.",
+  "action": "Defer training prescriptions until CBC + wearable baselines converge.",
+  "todayReasoning": "NLR×HRV absent — Insufficient wake HRV history for baseline window. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone. Composite scorer confidence `0.30`. Do not extrapolate readiness from headline numbers yet.",
   "monthlyContext": {
     "readiness": {
-      "score": 38.0,
-      "vsLastMonth": 6.9677,
+      "score": 0.0,
+      "vsLastMonth": 0.0,
       "windowLabel": "Apr 2026 cohort",
-      "meaning": "This calendar month composites averaged `38.0/100`; MoM Δ `+6.97` vs prior calendar month.",
+      "meaning": "This calendar month composites averaged `0.0/100`; MoM Δ `+0.00` vs prior calendar month.",
       "reasoning": ""
     },
     "bioAge": {
@@ -51,124 +51,124 @@
     "month": "April 2026",
     "days": [
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       },
       {
-        "state": "accumulating-fatigue",
-        "score": 38
+        "state": "insufficient_data",
+        "score": 0
       }
     ],
     "todayDayOfMonth": 30
@@ -176,11 +176,11 @@
   "monthlyHistory": [
     {
       "month": "Apr 2026",
-      "score": 38
+      "score": 0
     },
     {
       "month": "Mar 2026",
-      "score": 31
+      "score": 0
     },
     {
       "month": "Feb 2026",
@@ -196,17 +196,17 @@
     },
     {
       "month": "Nov 2025",
-      "score": 38.0
+      "score": 0
     }
   ],
   "sevenDayState": [
-    "accumulating-fatigue",
-    "accumulating-fatigue",
-    "accumulating-fatigue",
-    "accumulating-fatigue",
-    "accumulating-fatigue",
-    "accumulating-fatigue",
-    "accumulating-fatigue"
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data"
   ],
   "secondaryReadouts": [],
   "streams": [
@@ -295,7 +295,8 @@
         "unit": "pts",
         "vs": "yesterday"
       },
-      "reasoning": "14d onset σ≈26.0 min (local)"
+      "reasoning": "(no narrative row)",
+      "displayScore": "—"
     },
     "decoupling": {
       "zscore": 0.0,
@@ -328,9 +329,9 @@
   },
   "divergence": {
     "triggered": true,
-    "pattern": "",
+    "pattern": "insufficient_data",
     "skillRef": "skills/health-reasoning.md §4 divergence matrix",
-    "reasoning": "State: accumulating-fatigue (score 38/100). Primary signal: convergent (NLR×HRV=unknown, SRI=irregular, EF=unknown). Confidence: 0.1%. Action: Reduce load; monitor for 3–5 days before reassessing.",
+    "reasoning": "Insufficient data: NLR×HRV (wedge) tier is unknown — headline composite readiness is not numerically interpretable. CBC anchor metadata: 110 days since draw. Sleep regularity and/or aerobic decoupling may still report bands; they do not substitute for the NLR×HRV inflammatory × autonomic wedge.",
     "drivers": [
       {
         "signal": "NLR×HRV",
@@ -340,11 +341,52 @@
       },
       {
         "signal": "Illness window",
-        "value": "Synthetic viral GI overlap — demo context only.",
-        "note": "2026-03-25 – 2026-04-05",
+        "value": "Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati",
+        "note": "2026-01-10 – 2026-02-15",
         "state": "green"
       }
-    ]
+    ],
+    "question": {
+      "prompt": "Insufficient-data gate — missing: Wake HRV baseline window; NLR×HRV wedge unknown — fused headline withheld (see refusal reasoning); Aerobic decoupling. Which explanation best matches?",
+      "options": [
+        {
+          "id": "fresh_cbc",
+          "label": "Fresh CBC differential landed.",
+          "response": {
+            "headline": "Queue blood panel ingest → rebuild nlr_hrv + composite parquets.",
+            "confidenceTransition": "",
+            "actions": [
+              "Ingest CBC",
+              "Re-run parquet writers"
+            ]
+          }
+        },
+        {
+          "id": "wearable_backfill",
+          "label": "Wearable CSV back-filled for HRV dates.",
+          "response": {
+            "headline": "Backfilled HEARTRATE_AUTO restores baseline counting window.",
+            "confidenceTransition": "",
+            "actions": [
+              "load_all ingest",
+              "nlr_hrv.score_range"
+            ]
+          }
+        },
+        {
+          "id": "planned_break",
+          "label": "Intentional deload unrelated to telemetry gaps.",
+          "response": {
+            "headline": "Annotate deliberate rest/travel windows in context_flags.yaml.",
+            "confidenceTransition": "",
+            "actions": [
+              "Edit YAML windows",
+              "Re-run composite"
+            ]
+          }
+        }
+      ]
+    }
   },
   "interventions": [
     {
@@ -352,7 +394,7 @@
       "effort": 4,
       "impact": "HIGH",
       "category": "training",
-      "why": "Composite 38.0 below 55 — prioritize recovery primitives.",
+      "why": "Composite 0.0 below 55 — prioritize recovery primitives.",
       "skillRef": "composite-spec §3",
       "shortcut": "⌘1"
     },
@@ -365,5 +407,6 @@
       "skillRef": "§2.2",
       "shortcut": "⌘2"
     }
-  ]
+  ],
+  "todayScoreDisplay": "—"
 }

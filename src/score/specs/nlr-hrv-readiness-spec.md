@@ -2,7 +2,7 @@
 
 ## Status
 
-Spec only. No implementation. Per `CLAUDE.md`: "Spec before code for any component over ~30 lines." This scorer will exceed that.
+Implemented in `src/score/nlr_hrv_readiness.py`. This spec remains the contract for formula, tiers, and edge-case behavior.
 
 ## Purpose
 

@@ -4,7 +4,10 @@
 illness_windows:
   - start: "2025-06-08"
     end: "2025-06-29"
-    note: "food poisoning, panel drawn 2025-06-15"
+    note: "food poisoning (Oct 2025 summary panel; no differential available)"
+  - start: "2026-01-05"
+    end: "2026-01-20"
+    note: "pneumonia close call; CBC drawn ~Jan 10 (WBC 14.0, NLR 5.37)"
 
 travel_windows: [] # add as you remember them, or leave empty
 

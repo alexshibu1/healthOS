@@ -113,14 +113,18 @@ def _format_missing_parquet(repo_root: Path, name: str) -> SnapshotBuildError:
             "from nlr_hrv_readiness.score_day + flagship inputs (wired to ingest in your runner)."
         ),
         "nlr_hrv.parquet": "Populate via src.score.nlr_hrv_readiness.score_range(...).",
+        "sri.parquet": "Populate via python -m src.score.sri (after ingest).",
+        "aerobic_decoupling.parquet": (
+            "Populate via python -m src.score.aerobic_decoupling (after ingest)."
+        ),
         "bio_age.parquet": (
             "Run src.score.bio_age.score_timeseries_to_parquet("
             "input_csv=…, chronological_age=float from data/profile.yaml, output_parquet=…)."
         ),
     }
     extra = hints.get(name) or (
-        "SRI / aerobic decoupling writers are repo-external until scorers merge — export daily "
-        "series with documented provenance."
+        "Run the scorer modules under src/score/ that emit this parquet; see Makefile demo "
+        "target for ordering."
     )
     return SnapshotBuildError(p, f"{base}\n{extra}")
 
@@ -722,11 +726,9 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
 
     missing_bits: list[str] = []
     if insufficient_data:
-        missing_bits.extend([
-            "NLR×HRV may be refuse/unknown (<7d baseline or CBC gap)",
-            "SRI parquet tier unknown fallback",
-            "Decoupling parquet tier unknown fallback",
-        ])
+        missing_bits.append(
+            "NLR×HRV wedge unknown — fused headline withheld (see refusal reasoning)",
+        )
     rn = str(nlr_d.get("reasoning") or "")
     if insufficient_data:
         mb_text = rn.lower()
@@ -751,7 +753,17 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
     display_note, cb_age_days = _nlr_unknown_display(rn)
     bridge_parts = []
     if insufficient_data:
-        bridge_parts.append("Composite halted in insufficient-data until flagship lenses converge.")
+        sri_has_band = bool(sri_d) and tier_sri and tier_sri != "unknown"
+        ado_has_band = bool(ado_d) and tier_ado and str(tier_ado).lower() != "unknown"
+        if tier_nlr == "unknown" and (sri_has_band or ado_has_band):
+            bridge_parts.append(
+                "Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are "
+                "supportive only — do not infer a 0–100 training readiness from partial lenses alone."
+            )
+        else:
+            bridge_parts.append(
+                "Composite halted in insufficient-data until flagship inputs converge."
+            )
     else:
         bridge_parts.append(str(row_c["reasoning"] or "").split(".")[0] + ".")
         if rn and not rn.startswith(str(bridge_parts[0][:20])):
@@ -1054,6 +1066,19 @@ def main() -> None:
         encoding="utf-8",
     )
     print(f"Wrote {outp}")
+
+    rr = rr if rr is not None else outp.resolve().parent.parent.parent.parent
+    profile_default = rr / "profile.yaml"
+    profile_path = Path(os.environ.get("HEALTHOS_PROFILE", profile_default)).expanduser()
+    skill_path = rr / "skills" / "health-reasoning.md"
+    llm_out = rr / "web" / "src" / "data" / "llm_prompt.txt"
+    if profile_path.is_file() and skill_path.is_file():
+        from src.report.llm_prompt import build_recommendation_prompt
+
+        llm_text = build_recommendation_prompt(outp, profile_path, skill_path)
+        llm_out.parent.mkdir(parents=True, exist_ok=True)
+        llm_out.write_text(llm_text, encoding="utf-8")
+        print(f"Wrote {llm_out}")
 
 
 if __name__ == "__main__":

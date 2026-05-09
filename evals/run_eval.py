@@ -2,9 +2,11 @@
 """
 evals/run_eval.py
 
-Load human labels from evals/labeled-days.md, run the real ingest pipeline +
-composite scorer per day, compare to subjective felt recovery, write
-evals/divergence-report.md.
+Load human labels from evals/labeled-days.md, run the real ingest pipeline for
+NLR×HRV plus **production-parquet SRI and aerobic decoupling** (same row
+mapping as ``src.score.composite.score_range_from_parquets``), fuse with
+``composite.score_day``, compare to subjective felt recovery, write
+``evals/divergence-report.md``.
 
 Does not tune thresholds — surfaces divergence for human review only.
 """
@@ -34,13 +36,22 @@ from src.score.composite import (
     EfInput,
     NlrHrvInput,
     SriInput,
+    _ado_row_to_input,
     _fill_hrv_direction,
+    _sri_row_to_input,
     score_day as composite_score_day,
 )
 from src.score.nlr_hrv_readiness import score_day as nlr_hrv_score_day
 
 _DEFAULT_LABELED = _REPO_ROOT / "evals" / "labeled-days.md"
 _DEFAULT_REPORT = _REPO_ROOT / "evals" / "divergence-report.md"
+_DEFAULT_SCORES_DIR = _REPO_ROOT / "data" / "scores"
+
+_REQUIRED_PARQUETS = (
+    "nlr_hrv.parquet",
+    "sri.parquet",
+    "aerobic_decoupling.parquet",
+)
 
 # Map 1–10 felt to 0–100 for metrics (same interpretability as "8/10 → 80/100").
 _FELT_SCALE_DOC = (
@@ -76,6 +87,46 @@ def _since_for_baseline(first_labeled: date, buffer_days: int = 45) -> str:
     return (first_labeled - timedelta(days=buffer_days)).isoformat()
 
 
+def _require_flagship_parquets(scores_dir: Path) -> None:
+    """
+    Pre-condition: production scorer outputs must exist so C2/C3 match the
+    fusion path used after ``python -m src.score.{sri,aerobic_decoupling,...}``.
+    """
+    scores_dir = scores_dir.resolve()
+    missing = [name for name in _REQUIRED_PARQUETS if not (scores_dir / name).is_file()]
+    if missing:
+        rel = scores_dir.relative_to(_REPO_ROOT) if scores_dir.is_relative_to(_REPO_ROOT) else scores_dir
+        listing = "\n".join(f"  - {scores_dir / m}" for m in missing)
+        raise SystemExit(
+            "evals/run_eval.py: required scorer parquet(s) missing.\n"
+            f"Expected directory: {scores_dir}\n"
+            "Run the ingest + flagship scorers first (e.g. `make demo` steps through "
+            "`snapshot_builder`, or score SRI / aerobic_decoupling into "
+            f"`{rel}`).\n"
+            "Missing:\n"
+            f"{listing}"
+        )
+
+
+def _load_score_parquet_indexed(path: Path) -> pd.DataFrame:
+    """Read parquet and index by calendar date (one row per date expected)."""
+    df = pd.read_parquet(path)
+    if "date" not in df.columns:
+        raise ValueError(f"{path}: expected a 'date' column")
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    return df.set_index("date", drop=False)
+
+
+def _row_for_scoring_date(df_ix: pd.DataFrame, scoring_date: date) -> pd.Series | None:
+    if scoring_date not in df_ix.index:
+        return None
+    row = df_ix.loc[scoring_date]
+    if isinstance(row, pd.DataFrame):
+        return row.iloc[0]
+    return row
+
+
 def _input_snapshot(
     scoring_date: date,
     c1_raw: dict,
@@ -105,7 +156,7 @@ def _input_snapshot(
             "sri": c2.sri,
             "confidence": c2.confidence,
             "quality_flags": list(c2.quality_flags),
-            "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply.",
+            "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join).",
         },
         "decoupling": {
             "decoupling_band": c3_eff.decoupling_band,
@@ -114,7 +165,7 @@ def _input_snapshot(
             "hrv_direction": c3_eff.hrv_direction,
             "confidence": c3_eff.confidence,
             "quality_flags": list(c3_eff.quality_flags),
-            "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply.",
+            "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input.",
         },
         "context_flags": dict(context_flags),
     }
@@ -126,7 +177,15 @@ def run_eval(
     rawdata_root: Path,
     baseline_buffer_days: int,
     context_flags_path: Optional[Path],
-) -> None:
+    scores_dir: Path,
+) -> tuple[float, float, float, float, float]:
+    """
+    Returns (pearson, spearman, mae, pred_std, felt_std); uses NaN for undefined correlations.
+    """
+    _require_flagship_parquets(scores_dir)
+    sri_ix = _load_score_parquet_indexed(scores_dir / "sri.parquet")
+    ado_ix = _load_score_parquet_indexed(scores_dir / "aerobic_decoupling.parquet")
+
     labeled = parse_labeled_days(labeled_path)
     first_d, last_d = labeled[0][0], labeled[-1][0]
     since = _since_for_baseline(first_d, baseline_buffer_days)
@@ -144,8 +203,10 @@ def run_eval(
             context_flags_path=context_flags_path,
         )
         c1 = NlrHrvInput.from_score_day(c1_raw)
-        c2 = SriInput()
-        c3 = EfInput()
+        sri_row = _row_for_scoring_date(sri_ix, scoring_date)
+        ado_row = _row_for_scoring_date(ado_ix, scoring_date)
+        c2 = _sri_row_to_input(sri_row) if sri_row is not None else SriInput()
+        c3 = _ado_row_to_input(ado_row) if ado_row is not None else EfInput()
         comp = composite_score_day(
             scoring_date,
             c1,
@@ -186,11 +247,19 @@ def run_eval(
     by_div = sorted(rows, key=lambda r: abs(r["divergence"]), reverse=True)
     top5 = by_div[:5]
 
+    scores_rel = (
+        scores_dir.resolve().relative_to(_REPO_ROOT)
+        if scores_dir.resolve().is_relative_to(_REPO_ROOT)
+        else scores_dir.resolve()
+    )
     lines: list[str] = [
         "# Divergence report",
         "",
         f"Generated from `{labeled_path.relative_to(_REPO_ROOT)}` using the ingest pipeline "
-        f"(`load_all`) and `src.score.composite.score_day`.",
+        f"(`load_all`) for **NLR×HRV**, `{scores_rel}/sri.parquet` and "
+        f"`{scores_rel}/aerobic_decoupling.parquet` for **C2/C3** (same "
+        f"``_sri_row_to_input`` / ``_ado_row_to_input`` as production parquet join), "
+        f"then `src.score.composite.score_day`.",
         "",
         "## Scaling (read this first)",
         "",
@@ -200,6 +269,7 @@ def run_eval(
         "",
         f"- Labeled days: **{len(rows)}** ({first_d} → {last_d})",
         f"- Ingest `since`: `{since}` (buffer **{baseline_buffer_days}** d before first label)",
+        f"- Scores dir: `{scores_dir.resolve()}`",
         f"- Pearson r (predicted composite vs felt×10): **{pearson_f:.4f}**"
         if not math.isnan(pearson_f)
         else "- Pearson r: **undefined** (zero variance on one or both series)",
@@ -252,13 +322,15 @@ def run_eval(
         ])
 
     lines.append(
-        "_No thresholds were auto-tuned. Use this report to inspect systematic "
-        "over/under-shoots and missing lens coverage (SRI / decoupling)._"
+        "_No thresholds were auto-tuned. C2/C3 come from disk parquets when the "
+        "labeled date exists there; otherwise those lenses fall back to unknown "
+        "like a missing join row in production._"
     )
 
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Wrote {report_path}")
+    return pearson_f, spearman_f, mae, pred_std, felt_std
 
 
 def main() -> None:
@@ -293,6 +365,12 @@ def main() -> None:
         default=None,
         help="Override path to context_flags.yaml (default: data/context_flags.yaml)",
     )
+    p.add_argument(
+        "--scores-dir",
+        type=Path,
+        default=_DEFAULT_SCORES_DIR,
+        help="Directory containing nlr_hrv.parquet, sri.parquet, aerobic_decoupling.parquet",
+    )
     args = p.parse_args()
     run_eval(
         labeled_path=args.labeled_days.resolve(),
@@ -300,6 +378,7 @@ def main() -> None:
         rawdata_root=args.rawdata_root.resolve(),
         baseline_buffer_days=args.baseline_buffer_days,
         context_flags_path=args.context_flags.resolve() if args.context_flags else None,
+        scores_dir=args.scores_dir.resolve(),
     )
 
 

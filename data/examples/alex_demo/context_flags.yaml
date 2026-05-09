@@ -1,8 +1,16 @@
-# Synthetic demo windows — ties synthetic CBC episode + composite narratives.
+# Synthetic demo windows — composite + narrative hooks for snapshot / LLM handoff.
+# See README.md in this folder for how these relate to the wider demo story.
+
 illness_windows:
+  # Narrative anchor for scoring context (demo labels — not a clinical chart).
+  - start: "2026-01-10"
+    end: "2026-02-15"
+    note: "Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretation of spring labs, not a real diagnosis."
+
+  # Must overlap (start/end vs scoring date) last-14d window so Recent context + LLM prompt show it for April demos.
   - start: "2026-03-25"
-    end: "2026-04-05"
-    note: "Synthetic viral GI overlap — demo context only."
+    end: "2026-04-22"
+    note: "Demo arc — spring GI overlap / foodborne-style episode (synthetic labels); pairs with late-March CBC fixture."
 
 travel_windows: []
 

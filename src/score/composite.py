@@ -13,9 +13,9 @@ Design principle (composite-spec §1):
     are surfaced as named flags, not averaged away.
 
 Inputs:
-    C1 — NLR × HRV readiness (src/score/nlr_hrv_readiness.py)
-    C2 — Sleep Regularity Index (not yet implemented; accepts "unknown" gracefully)
-    C3 — Aerobic Decoupling / EF  (not yet implemented; accepts "unknown" gracefully)
+    C1 — NLR × HRV readiness (src/score/nlr_hrv_readiness.py) — wedge metric
+    C2 — Sleep Regularity Index (src/score/sri.py)
+    C3 — Aerobic decoupling (src/score/aerobic_decoupling.py)
     context_flags — from src/context/flags.py
 
 Output: CompositeResult dataclass + parquet at data/scores/composite.parquet
@@ -143,9 +143,9 @@ class NlrHrvInput:
 @dataclass
 class SriInput:
     """
-    C2 input from the SRI scorer (not yet implemented).
+    C2 input from the SRI scorer (src/score/sri.py).
 
-    Pass regularity_band="unknown" and confidence=0.5 until the scorer ships.
+    Pass regularity_band="unknown" and confidence=0.5 when unavailable.
     """
     regularity_band: str = "unknown"  # irregular | moderate | high | unknown
     sri: Optional[float] = None       # 0–100
@@ -156,7 +156,7 @@ class SriInput:
 @dataclass
 class EfInput:
     """
-    C3 input from the aerobic decoupling scorer (not yet implemented).
+    C3 input from the aerobic decoupling scorer (src/score/aerobic_decoupling.py).
 
     hrv_direction: populated by caller from C1.meta (up if hrv_term < 0.95,
     down if hrv_term > 1.05, stable otherwise).  Enables the §4 Pa:HR×HRV
@@ -200,8 +200,8 @@ def score_day(
     Compute the composite readiness state for one calendar day.
 
     composite-spec §4: state is determined by priority-ordered rules applied
-    to the three lens inputs and context flags.  Score is normalized within
-    the state's band per §5.
+    to the three lens inputs and context flags (after Rule 0 wedge gate when
+    C1.tier is unknown).  Score is normalized within the state's band per §5.
 
     Parameters
     ----------
@@ -233,26 +233,36 @@ def score_day(
     if recent_illness is None:
         recent_illness = _detect_recent_illness(scoring_date, context_flags_path)
 
-    # ── all flagship lenses unknown/refused — before §4.1 cascade ─────────────
-    if _all_flagship_lenses_unknown(c1, c2, c3):
-        n_unknown = _count_unknown_flagship_lenses(c1, c2, c3)
-        stale_cbc_fragment = (
-            f"({c1.cbc_age_days}d)"
-            if c1.cbc_age_days is not None
-            else "(unknown)"
-        )
-        reasoning = (
-            "Insufficient data to compute composite. "
-            f"{n_unknown} of 3 flagship lenses returned unknown. "
-            "Most common cause: stale CBC "
-            f"{stale_cbc_fragment} or insufficient HRV baseline window."
-        )
+    # ── wedge metric (NLR×HRV) unknown — before §4.1 cascade ───────────────────
+    # Without C1, fused inflammatory × autonomic readiness is undefined; do not
+    # emit accumulating-fatigue/recovered from SRI/EF alone (composite-spec §1).
+    if c1.tier == "unknown":
+        parts: list[str] = [
+            "Insufficient data: NLR×HRV (wedge) tier is unknown — headline composite "
+            "readiness is not numerically interpretable.",
+        ]
+        if c1.quality_flags:
+            parts.append(f"Flags: {', '.join(sorted(c1.quality_flags))}.")
+        if c1.cbc_age_days is not None:
+            parts.append(f"CBC anchor metadata: {c1.cbc_age_days} days since draw.")
+        c2_u = _flagship_lens_unknown_or_refused_c2(c2)
+        c3_u = _flagship_lens_unknown_or_refused_c3(c3)
+        if c2_u and c3_u:
+            parts.append(
+                "All three flagship lenses returned unknown — typical drivers: stale CBC, "
+                "insufficient wake-HRV baseline, or missing sleep/activity coverage."
+            )
+        else:
+            parts.append(
+                "Sleep regularity and/or aerobic decoupling may still report bands; "
+                "they do not substitute for the NLR×HRV inflammatory × autonomic wedge."
+            )
         return CompositeResult(
             state            = "insufficient_data",
             score            = 0,
-            primary_signal   = "convergent",
+            primary_signal   = "nlr_hrv",
             divergence_flags = [],
-            reasoning        = reasoning,
+            reasoning        = " ".join(parts),
             confidence       = _INSUFFICIENT_DATA_CONF,
         )
 
@@ -486,49 +496,17 @@ def _composite_cli() -> None:
     print(f"Wrote {sd / 'composite.parquet'}", file=sys.stderr)
 
 
-# ── flagship lens coverage (insufficient_data gate, before §4.1) ─────────────
-
-
-def _flagship_lens_unknown_or_refused_c1(c1: NlrHrvInput) -> bool:
-    """C1 reports no usable NLR×HRV classification."""
-    return c1.tier == "unknown"
+# ── flagship lens coverage (before §4.1) ──────────────────────────────────────
 
 
 def _flagship_lens_unknown_or_refused_c2(c2: SriInput) -> bool:
-    """C2 (SRI) not yet classifiable."""
+    """C2 band not usable for fusion."""
     return c2.regularity_band == "unknown"
 
 
 def _flagship_lens_unknown_or_refused_c3(c3: EfInput) -> bool:
-    """C3 (aerobic decoupling) not yet classifiable."""
+    """C3 band not usable for fusion."""
     return c3.decoupling_band == "unknown"
-
-
-def _all_flagship_lenses_unknown(
-    c1: NlrHrvInput,
-    c2: SriInput,
-    c3: EfInput,
-) -> bool:
-    return (
-        _flagship_lens_unknown_or_refused_c1(c1)
-        and _flagship_lens_unknown_or_refused_c2(c2)
-        and _flagship_lens_unknown_or_refused_c3(c3)
-    )
-
-
-def _count_unknown_flagship_lenses(
-    c1: NlrHrvInput,
-    c2: SriInput,
-    c3: EfInput,
-) -> int:
-    n = 0
-    if _flagship_lens_unknown_or_refused_c1(c1):
-        n += 1
-    if _flagship_lens_unknown_or_refused_c2(c2):
-        n += 1
-    if _flagship_lens_unknown_or_refused_c3(c3):
-        n += 1
-    return n
 
 
 # ── state classification ───────────────────────────────────────────────────────
@@ -569,7 +547,7 @@ def _classify_state(
     # Rule 4 — peripheral-strain (EF decoupling without central/systemic cause)
     # Skill §3.2: "EF ↓ + HRV ↑ → peripheral/environmental".
     if (
-        c1.tier in ("green", "caution", "unknown")
+        c1.tier in ("green", "caution")
         and c3.decoupling_band in ("high", "moderate")
         and c3.hrv_direction in ("up", "stable", "unknown")
     ):
@@ -594,15 +572,17 @@ def _classify_state(
     ):
         return "cleared", "context"
 
-    # Rule 7 — recovered (all nominal)
+    # Rule 7 — recovered (all nominal); C1 unknown handled earlier (Rule 0 wedge gate)
     if (
-        c1.tier in ("green", "unknown")
+        c1.tier == "green"
         and c2.regularity_band in ("high", "moderate", "unknown")
         and c3.decoupling_band in ("good", "unknown")
     ):
-        ps = "convergent" if (
-            c1.tier == "green" and c2.regularity_band in ("high", "moderate")
-        ) else "nlr_hrv"
+        ps = (
+            "convergent"
+            if c2.regularity_band in ("high", "moderate")
+            else "nlr_hrv"
+        )
         return "recovered", ps
 
     # Default: something is off but no specific pattern triggered

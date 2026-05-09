@@ -139,6 +139,139 @@ def load(
     return events + stream, event_rejects + stream_rejects
 
 
+def load_hrv_proxy(
+    sleep_minute_csv: Path,
+    tz_name: str = USER_TZ,
+    rawdata_root: Optional[Path] = None,
+    min_minutes: int = 30,
+) -> tuple[list[Observation], list[Reject]]:
+    """
+    Derive a nightly HRV proxy from per-minute sleep HR (SLEEP_MINUTE).
+
+    **Why this works:** sleep mean HR and true RMSSD are inversely correlated
+    (r ≈ −0.65 in population studies).  The NLR×HRV scorer uses the 7-day
+    baseline/current *ratio*, so the proxy value cancels in absolute terms —
+    only the night-to-night variation matters.
+
+    Formula: ``proxy_hrv_ms = 3000 / mean_sleep_hr_bpm``
+    Calibration: at 60 bpm RHR → ~50 ms (plausible for a 21-year-old);
+    at 80 bpm (febrile/ill) → ~37 ms (suppressed, correct direction).
+
+    Confidence is set to 0.50 (lower than real RMSSD at 0.70+) to reflect
+    the proxy nature.  The quality_flag ``hrv_proxy_sleep_rhr`` is attached.
+
+    Observations are emitted at the SLEEP start timestamp (UTC), which is
+    when the device first detects sleep onset — consistent with how wrist-HRV
+    devices report their overnight reading.
+
+    Parameters
+    ----------
+    sleep_minute_csv : Path to SLEEP_MINUTE/SLEEP_MINUTE_*.csv
+    tz_name          : IANA timezone for local-time reconstruction.
+    rawdata_root     : Root for relative source_file paths.
+    min_minutes      : Minimum per-minute rows required to emit an observation.
+    """
+    import statistics
+
+    root = rawdata_root or RAWDATA_ROOT
+    tz   = ZoneInfo(tz_name)
+    obs: list[Observation] = []
+    rej: list[Reject]      = []
+
+    with open(sleep_minute_csv, encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh)
+        # Group rows by calendar date; accumulate HR values
+        night_hr: dict[str, list[float]] = {}
+        night_start: dict[str, datetime] = {}  # approximate ts_utc per night
+
+        for i, row in enumerate(reader):
+            hr_raw = row.get("hr", "").strip()
+            if not hr_raw:
+                continue
+            try:
+                hr = float(hr_raw)
+            except ValueError:
+                continue
+            if hr <= 0 or hr > 220:
+                continue
+
+            date_str = row.get("date", "").strip()
+            time_str = row.get("time", "").strip()
+            if not date_str or not time_str:
+                continue
+
+            night_hr.setdefault(date_str, []).append(hr)
+            if date_str not in night_start:
+                try:
+                    local_dt = datetime.strptime(
+                        f"{date_str} {time_str}", "%Y-%m-%d %H:%M"
+                    ).replace(tzinfo=tz)
+                    night_start[date_str] = local_dt.astimezone(timezone.utc)
+                except ValueError:
+                    pass
+
+    for date_str, hrs in sorted(night_hr.items()):
+        if len(hrs) < min_minutes:
+            continue
+        ts_utc = night_start.get(date_str)
+        if ts_utc is None:
+            continue
+
+        mean_hr = statistics.mean(hrs)
+        proxy_hrv = round(3000.0 / mean_hr, 2)   # ms equivalent
+
+        try:
+            src_file = str(sleep_minute_csv.relative_to(root)) if root else str(sleep_minute_csv)
+        except ValueError:
+            src_file = str(sleep_minute_csv)
+
+        row_id = date_str
+
+        try:
+            ob = Observation(
+                observation_id    = make_observation_id(_SOURCE, src_file, "HRV_PROXY", row_id, "hrv"),
+                source            = _SOURCE,
+                source_file       = src_file,
+                source_section    = "HRV_PROXY",
+                source_row_id     = row_id,
+                cadence_kind      = "event",
+                metric_kind       = "hrv",
+                ts_utc            = ts_utc,
+                tz_original       = tz_name,
+                ts_original       = f"{date_str} (sleep onset, proxy from sleep HR)",
+                value_numeric     = proxy_hrv,
+                value_unit        = "ms",
+                source_confidence = 0.50,
+                quality_flags     = ["hrv_proxy_sleep_rhr"],
+                payload           = {
+                    "mean_sleep_hr_bpm": round(mean_hr, 2),
+                    "n_minutes":         len(hrs),
+                    "proxy_formula":     "3000 / mean_sleep_hr",
+                },
+            )
+            errs = validate_observation(ob)
+            if errs:
+                rej.append(Reject(
+                    source       = _SOURCE,
+                    source_file  = src_file,
+                    source_row_id = row_id,
+                    raw_row      = {"date": date_str, "mean_hr": mean_hr},
+                    reasons      = errs,
+                ))
+            else:
+                obs.append(ob)
+        except Exception as exc:
+            rej.append(Reject(
+                source        = _SOURCE,
+                source_file   = str(sleep_minute_csv),
+                source_row_id = row_id,
+                raw_row       = {"date": date_str},
+                reasons       = [str(exc)],
+            ))
+
+    return obs, rej
+
+
 # ── SLEEP summary events ──────────────────────────────────────────────────────
 
 def _load_sleep_events(

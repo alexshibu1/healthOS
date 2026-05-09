@@ -8,12 +8,12 @@ SINCE := 2026-03-01
 UNTIL := 2026-04-30
 MONTH := 2026-04
 
-.PHONY: demo demo-dataset
+.PHONY: demo demo-pipeline demo-web demo-build demo-dataset
 
 demo-dataset:
 	python scripts/build_alex_demo_dataset.py --end-date $(UNTIL) --days 60
 
-demo:
+demo-pipeline:
 	RAWDATA_ROOT=$(DEMO) CONTEXT_FLAGS=$(DEMO)/context_flags.yaml HEALTHOS_PROFILE=$(DEMO)/profile.yaml \
 		python -m src.ingest.load_all --since $(SINCE)
 	RAWDATA_ROOT=$(DEMO) CONTEXT_FLAGS=$(DEMO)/context_flags.yaml HEALTHOS_PROFILE=$(DEMO)/profile.yaml \
@@ -31,4 +31,13 @@ demo:
 		python -m src.interventions --date $(UNTIL)
 	CONTEXT_FLAGS=$(DEMO)/context_flags.yaml HEALTHOS_PROFILE=$(DEMO)/profile.yaml \
 		python -m src.report.snapshot_builder --date $(UNTIL) --out $(ROOT)/web/src/data/snapshot.json
-	cd $(ROOT)/web && npm run dev
+
+demo-web:
+	cd $(ROOT)/web && npm install && npm run build && npm run dev
+
+demo-build: demo-pipeline
+	cd $(ROOT)/web && npm install && npm run build
+
+# Runs demo-pipeline then demo-web. npm run dev keeps the dev server running;
+# press Ctrl+C in the terminal to exit.
+demo: demo-pipeline demo-web

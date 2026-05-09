@@ -1,6 +1,6 @@
 # Divergence report
 
-Generated from `evals/labeled-days.md` using the ingest pipeline (`load_all`) and `src.score.composite.score_day`.
+Generated from `evals/labeled-days.md` using the ingest pipeline (`load_all`) for **NLR×HRV**, `data/scores/sri.parquet` and `data/scores/aerobic_decoupling.parquet` for **C2/C3** (same ``_sri_row_to_input`` / ``_ado_row_to_input`` as production parquet join), then `src.score.composite.score_day`.
 
 ## Scaling (read this first)
 
@@ -8,24 +8,28 @@ Felt recovery (1–10 from labeled-days.md) is scaled to 0–100 as `felt_0_100 
 
 ## Summary
 
+- **Prior eval (C2/C3 forced to default `unknown`):** Pearson / Spearman **undefined** (σ(predicted)=0, MAE **72.6667** on the same labels) — see git history or pre-2026-05-09 `run_eval.py`.
+- **This run:** C2/C3 rows from `data/scores/sri.parquet` and `data/scores/aerobic_decoupling.parquet` via the **same** ``_sri_row_to_input`` / ``_ado_row_to_input`` helpers as production ``score_range_from_parquets``.
+
 - Labeled days: **15** (2026-04-24 → 2026-05-08)
 - Ingest `since`: `2026-03-10` (buffer **45** d before first label)
-- Pearson r: **undefined** (zero variance on one or both series)
-- Spearman ρ: **undefined** (zero variance on one or both series)
-- MAE (on 0–100 scale): **72.6667**
-- σ(predicted): **0.0000**, σ(felt×10): **5.7349**
+- Scores dir: `/Users/alexshibu/Documents/AlexwebDevBootcamp/healthOS/data/scores`
+- Pearson r (predicted composite vs felt×10): **-0.6680**
+- Spearman ρ: **-0.6786**
+- MAE (on 0–100 scale): **54.9333**
+- σ(predicted): **18.9577**, σ(felt×10): **5.7349**
 
 ## All days (divergence = predicted − felt×10)
 
 | date | felt 1–10 | felt×10 | predicted | divergence | state |
 |------|------------|---------|-----------|------------|-------|
-| 2026-04-24 | 6 | 60 | 0 | -60.0 | insufficient_data |
-| 2026-04-25 | 7 | 70 | 0 | -70.0 | insufficient_data |
-| 2026-04-26 | 7 | 70 | 0 | -70.0 | insufficient_data |
-| 2026-04-27 | 7 | 70 | 0 | -70.0 | insufficient_data |
-| 2026-04-28 | 7 | 70 | 0 | -70.0 | insufficient_data |
-| 2026-04-29 | 7 | 70 | 0 | -70.0 | insufficient_data |
-| 2026-04-30 | 7 | 70 | 0 | -70.0 | insufficient_data |
+| 2026-04-24 | 6 | 60 | 38 | -22.0 | accumulating-fatigue |
+| 2026-04-25 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
+| 2026-04-26 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
+| 2026-04-27 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
+| 2026-04-28 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
+| 2026-04-29 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
+| 2026-04-30 | 7 | 70 | 38 | -32.0 | accumulating-fatigue |
 | 2026-05-01 | 7 | 70 | 0 | -70.0 | insufficient_data |
 | 2026-05-02 | 7 | 70 | 0 | -70.0 | insufficient_data |
 | 2026-05-03 | 7 | 70 | 0 | -70.0 | insufficient_data |
@@ -63,7 +67,7 @@ Felt recovery (1–10 from labeled-days.md) is scaled to 0–100 as `felt_0_100 
     "sri": null,
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply."
+    "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join)."
   },
   "decoupling": {
     "decoupling_band": "unknown",
@@ -72,7 +76,7 @@ Felt recovery (1–10 from labeled-days.md) is scaled to 0–100 as `felt_0_100 
     "hrv_direction": "unknown",
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply."
+    "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input."
   },
   "context_flags": {
     "illness": false,
@@ -114,7 +118,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "sri": null,
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply."
+    "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join)."
   },
   "decoupling": {
     "decoupling_band": "unknown",
@@ -123,7 +127,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "hrv_direction": "unknown",
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply."
+    "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input."
   },
   "context_flags": {
     "illness": false,
@@ -165,7 +169,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "sri": null,
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply."
+    "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join)."
   },
   "decoupling": {
     "decoupling_band": "unknown",
@@ -174,7 +178,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "hrv_direction": "unknown",
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply."
+    "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input."
   },
   "context_flags": {
     "illness": false,
@@ -216,7 +220,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "sri": null,
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply."
+    "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join)."
   },
   "decoupling": {
     "decoupling_band": "unknown",
@@ -225,7 +229,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "hrv_direction": "unknown",
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply."
+    "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input."
   },
   "context_flags": {
     "illness": false,
@@ -267,7 +271,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "sri": null,
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C2 from ingest pipeline: SRI scorer not wired in eval v1 — defaults apply."
+    "note": "C2 from data/scores/sri.parquet via _sri_row_to_input (same as composite parquet join)."
   },
   "decoupling": {
     "decoupling_band": "unknown",
@@ -276,7 +280,7 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
     "hrv_direction": "unknown",
     "confidence": 0.5,
     "quality_flags": [],
-    "note": "C3 from ingest pipeline: aerobic decoupling scorer not wired in eval v1 — defaults apply."
+    "note": "C3 from data/scores/aerobic_decoupling.parquet via _ado_row_to_input."
   },
   "context_flags": {
     "illness": false,
@@ -292,4 +296,4 @@ Insufficient data to compute composite. 3 of 3 flagship lenses returned unknown.
 
 ---
 
-_No thresholds were auto-tuned. Use this report to inspect systematic over/under-shoots and missing lens coverage (SRI / decoupling)._
+_No thresholds were auto-tuned. C2/C3 come from disk parquets when the labeled date exists there; otherwise those lenses fall back to unknown like a missing join row in production._

@@ -1,3 +1,9 @@
+# Python bytecode / caches (never source)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
 rawdata/
 data/personal/
 data/scores/

@@ -1,30 +1,21 @@
-# Divergence Analysis — May 2026 eval run
+# Divergence analysis — maintenance note + current behavior
 
-## Headline finding
+## Generated report
 
-Composite returned 89 (recovered) on all 15 labeled days. Felt scores ranged 6–8. Pearson and Spearman are undefined because predicted variance is zero. MAE 16.3 reflects systematic over-prediction, not noise.
+**Step 1 — refresh numbers:** `evals/divergence-report.md` is **overwritten** each time you run:
 
-## Root cause
+```bash
+python evals/run_eval.py
+```
 
-NLR×HRV scorer returned `unknown` for every labeled day. This cascades into composite using its default fallback, which lands in `recovered` when no flagship lens reports a degraded state.
+Read that file for Pearson / Spearman / MAE and the per-day table. This document is **not** auto-generated; update it when methodology or composite rules change materially.
 
-The unknown-NLR×HRV cause is data-coverage, not formula:
+## Eval harness (current)
 
-1. The 7-day HRV baseline window had insufficient prior observations
-2. The CBC panel (only one in the dataset, dated 2025-06-15) is now ~330d stale, well past the 60d staleness ceiling — scorer correctly refuses
+- **`evals/run_eval.py`** loads labels from `evals/labeled-days.md`, runs **`load_all`** for NLR×HRV, reads **`data/scores/sri.parquet`** and **`data/scores/aerobic_decoupling.parquet`** for C2/C3 (same row mapping as production `composite.score_range_from_parquets`), then **`composite.score_day`**. The three flagship parquets **must exist** before the eval runs.
 
-## What this means for the model
+## Composite headline (current)
 
-The model isn't wrong on the labeled days. It's silent. Silence + "recovered" default = false confidence. The fix is not retuning thresholds.
+- If **NLR×HRV (C1) tier is `unknown`**, composite is **`insufficient_data`** (score **0**, confidence floor **0.3**) — **even when SRI and aerobic decoupling have bands**. The wedge cannot be fused without C1; see `src/score/specs/composite-spec.md` Rule 0.
 
-## Proposed changes (justified, not retuned)
-
-1. **Composite default state when all lenses unknown.** Currently falls to `recovered`. Should fall to `insufficient_data` with a confidence floor (e.g. 0.3) and explicit reasoning string. New state, not a reweight. This is the only spec change.
-
-2. **Snapshot builder must surface data-coverage state.** When composite is `insufficient_data`, the headline state name and bridge subline must say so plainly. Don't show a confident 89 when the inputs aren't there. New input the snapshot builder needs from composite, not a formula change.
-
-3. **No threshold retunes.** The divergences here are not from formula error. Tuning thresholds against n=15 felt scores while the underlying inputs are silent would overfit to bias.
-
-## Out of scope for this analysis
-
-- Heat acclimatization, alcohol, life-stressor inputs — these would only be justified after the data-coverage issue is fixed and a re-run shows systematic divergences with reasoning. Don't add inputs to mask data gaps.
+- Eval correlations vs subjective felt scores are **descriptive only** (small **n**, protocol in `labeled-days.md`). Use `divergence-report.md` for the latest metrics after each run.

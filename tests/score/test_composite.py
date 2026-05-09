@@ -215,8 +215,8 @@ class TestStateClassification:
 
     def test_insufficient_data_all_three_lenses_unknown(self):
         """
-        Rule 0: C1.tier, C2.regularity_band, C3.decoupling_band all unknown
-        → insufficient_data, score 0, confidence 0.3 (before §4.1 cascade).
+        Rule 0: C1 unknown + C2/C3 unknown → insufficient_data (wedge gate).
+        Also covers former “all three unknown” case via shared wedge-first rule.
         """
         c1 = NlrHrvInput(
             tier="unknown", score=None, confidence=0.0,
@@ -231,8 +231,34 @@ class TestStateClassification:
         assert result.state == "insufficient_data"
         assert result.score == 0
         assert result.confidence == 0.3
+        assert result.primary_signal == "nlr_hrv"
         assert result.divergence_flags == []
-        assert "3 of 3 flagship lenses returned unknown" in result.reasoning
+        assert "All three flagship lenses returned unknown" in result.reasoning
+
+    def test_insufficient_data_wedge_unknown_sri_decoupling_known(self):
+        """
+        Wedge unknown but SRI + aerobic bands present → still insufficient_data,
+        not accumulating-fatigue with a numeric headline score.
+        """
+        c1 = NlrHrvInput(
+            tier="unknown", score=None, confidence=0.0,
+            nlr_term=1.0, hrv_term=1.0,
+            quality_flags=["cbc_stale"],
+            cbc_age_days=120,
+        )
+        c2 = SriInput(regularity_band="irregular", sri=64.0, confidence=0.82)
+        c3 = EfInput(decoupling_band="good", confidence=0.78)
+        result = score_day(
+            date(2026, 4, 30), c1, c2=c2, c3=c3,
+            context_flags=_NO_ILLNESS, recent_illness=False,
+        )
+        assert result.state == "insufficient_data"
+        assert result.score == 0
+        assert result.confidence == 0.3
+        assert result.primary_signal == "nlr_hrv"
+        assert "cbc_stale" in result.reasoning
+        assert "120 days" in result.reasoning
+        assert "do not substitute" in result.reasoning.lower()
 
 
 # ══════════════════════════════════════════════════════════════════════════════

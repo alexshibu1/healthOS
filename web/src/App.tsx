@@ -5,9 +5,11 @@ import { SecondaryReadouts } from "./components/SecondaryReadouts";
 import { FlagshipCards } from "./components/FlagshipCards";
 import { DivergenceStrip } from "./components/DivergenceStrip";
 import { Interventions } from "./components/Interventions";
+import { LLMHandoff } from "./components/LLMHandoff";
 import { SectionDivider } from "./components/SectionDivider";
 import { Disclaimer } from "./components/Disclaimer";
 import { loadSnapshot } from "./data/loadSnapshot";
+import promptText from "./data/llm_prompt.txt?raw";
 import { STATE_TO_COLOR } from "./lib/stateColors";
 
 /* ---------------------------------------------------------------- *
@@ -24,6 +26,7 @@ import { STATE_TO_COLOR } from "./lib/stateColors";
  *   III. The Signals         the three primary metrics — NLR×HRV, *
  *                            SRI, aerobic decoupling              *
  *   IV. The Three Levers     the punchline: do these three things *
+ *   V. Get recommendations   LLM handoff prompt from your snapshot *
  *                                                                   *
  * Section IV is intentionally placed last because it's the         *
  * payoff — every signal above exists to justify these three        *
@@ -38,6 +41,7 @@ function App() {
   const divergenceVisible = data.divergence.triggered;
   const signalsNumeral = divergenceVisible ? "III" : "II";
   const leversNumeral = divergenceVisible ? "IV" : "III";
+  const llmNumeral = divergenceVisible ? "V" : "IV";
 
   return (
     <div className="min-h-screen text-ink">
@@ -94,6 +98,9 @@ function App() {
           annotation="ranked by 80/20 impact"
         />
         <Interventions interventions={data.interventions} />
+
+        {/* V. LLM handoff — deterministic prompt for external recommendations. */}
+        <LLMHandoff promptText={promptText} numeral={llmNumeral} />
 
         <Disclaimer />
       </main>

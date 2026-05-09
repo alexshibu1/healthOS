@@ -44,7 +44,7 @@ from src.ingest.config import RAWDATA_ROOT
 from src.ingest.schema import Observation
 
 # ── source loaders ────────────────────────────────────────────────────────────
-from src.ingest.amazfit.sleep_loader    import load as load_sleep
+from src.ingest.amazfit.sleep_loader    import load as load_sleep, load_hrv_proxy
 from src.ingest.amazfit.hr_loader       import load as load_hr
 from src.ingest.amazfit.body_loader     import load as load_body
 from src.ingest.amazfit.activity_loader import load as load_activity
@@ -106,6 +106,11 @@ def load_all(
 
     obs, rej = load_sleep(sleep_csv, sleep_minute_csv, rawdata_root=root)
     _collect(all_obs, all_rejects, obs, rej, "amazfit/sleep")
+
+    # HRV proxy derived from per-minute sleep HR (3000/mean_sleep_HR formula).
+    # Unlocks NLR×HRV scorer when no RMSSD device is connected.
+    obs, rej = load_hrv_proxy(sleep_minute_csv, rawdata_root=root)
+    _collect(all_obs, all_rejects, obs, rej, "amazfit/hrv_proxy")
 
     obs, rej = load_hr(hr_csv, rawdata_root=root)
     _collect(all_obs, all_rejects, obs, rej, "amazfit/hr")
