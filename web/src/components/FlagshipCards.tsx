@@ -25,18 +25,29 @@ export function FlagshipCards({
 }: FlagshipCardsProps) {
   const nlrColor = FLAGSHIP_TIER_TO_COLOR[nlrHrv.tier] as StateColor;
   const sriColor = FLAGSHIP_TIER_TO_COLOR[sri.tier] as StateColor;
+
+  const nlrAbsent = Boolean(nlrHrv.displayScore?.trim());
+
+  const sriAbsent = Boolean(sri.displayScore?.trim());
+
+  const decoAbsent = Boolean(decoupling.displayZscore?.trim());
+
   const decoupColor: StateColor =
-    decoupling.zscore >= 1
+    decoAbsent ? "amber" : decoupling.zscore >= 1
       ? "red"
       : decoupling.zscore >= 0
         ? "amber"
         : "green";
 
   // severity-based fill — more fill = louder signal regardless of metric direction
-  const nlrFill = clamp((nlrHrv.score / 2.0) * 100, 0, 100);
-  const sriFill = clamp(((100 - sri.score) / 50) * 100, 0, 100);
-  const decoupFill = clamp((Math.abs(decoupling.zscore) / 2.0) * 100, 0, 100);
+  const nlrFill = nlrAbsent ? 38 : clamp((nlrHrv.score / 2.0) * 100, 0, 100);
+  const sriFill = sriAbsent ? 38 : clamp(((100 - sri.score) / 50) * 100, 0, 100);
+  const decoupFill =
+    decoAbsent ? 38 : clamp((Math.abs(decoupling.zscore) / 2.0) * 100, 0, 100);
 
+  const nlrSpark = sparklineExtents(nlrHrv.sparkline);
+  const sriSpark = sparklineExtents(sri.sparkline);
+  const decoSpark = sparklineExtents(decoupling.sparkline);
   return (
     <section className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-8 md:grid-cols-3 md:gap-6">
       <FlagshipCard
@@ -47,24 +58,23 @@ export function FlagshipCards({
         thresholdTicks={[50, 75]}
         ringDisplay={
           <span className="display tabular text-card font-light text-ink">
-            {nlrHrv.score.toFixed(2)}
+            {nlrHrv.displayScore ?? nlrHrv.score.toFixed(2)}
           </span>
         }
         tierLabel={nlrHrv.tier.toUpperCase()}
         thresholdContext={
-          nlrHrv.score >= 1.5
-            ? "above 1.5 deload threshold"
-            : nlrHrv.score >= 1.0
-              ? "in 1.0–1.5 caution band"
-              : "below 1.0 — green"
+          nlrAbsent
+            ? (nlrHrv.reasoning ?? "NLR×HRV lens unavailable for this parquet day.")
+            : nlrHrv.score >= 1.5
+              ? "above 1.5 deload threshold"
+              : nlrHrv.score >= 1.0
+                ? "in 1.0–1.5 caution band"
+                : "below 1.0 — green"
         }
         delta={nlrHrv.delta}
         meaning="Inflammation outpacing autonomic recovery — improving HRV is the lymphocyte side recovering before the neutrophil side has."
         sparkline={nlrHrv.sparkline}
-        sparklineRange={{
-          min: Math.min(...nlrHrv.sparkline),
-          max: Math.max(...nlrHrv.sparkline),
-        }}
+        sparklineRange={nlrSpark}
         dataAge={`CBC ${nlrHrv.dataAgeDays}d`}
         reasoning={nlrHrv.reasoning}
         formula="NLR ÷ 3.0 × (7-day HRV baseline ÷ today's HRV). Each side above 1.0 means you're off baseline; multiplying amplifies agreement and dampens single-system divergences."
@@ -85,24 +95,23 @@ export function FlagshipCards({
         thresholdTicks={[40, 60]}
         ringDisplay={
           <span className="display tabular text-card font-light text-ink">
-            {sri.score}
+            {sri.displayScore ?? sri.score}
           </span>
         }
         tierLabel={sri.tier.toUpperCase()}
         thresholdContext={
-          sri.score < 70
-            ? "below 70 — irregular"
-            : sri.score < 80
-              ? "below 80 — moderate"
-              : "above 80 — high"
+          sriAbsent
+            ? (sri.reasoning ?? "SRI lens unavailable for this parquet day.")
+            : sri.score < 70
+              ? "below 70 — irregular"
+              : sri.score < 80
+                ? "below 80 — moderate"
+                : "above 80 — high"
         }
         delta={sri.delta}
         meaning="Sleep timing varies night-to-night enough to add measurable circadian drag, even though total hours look fine."
         sparkline={sri.sparkline}
-        sparklineRange={{
-          min: Math.min(...sri.sparkline),
-          max: Math.max(...sri.sparkline),
-        }}
+        sparklineRange={sriSpark}
         dataAge={`window ${sri.windowDays}d`}
         reasoning={sri.reasoning}
         formula="Phillips SRI: percentage of consecutive minute-pairs where you were in the same sleep/wake state at the same clock time on adjacent days. Range 0 (random) to 100 (identical timing)."
@@ -123,24 +132,24 @@ export function FlagshipCards({
         thresholdTicks={[50, 75]}
         ringDisplay={
           <span className="display tabular text-card font-light text-ink">
-            {`${decoupling.zscore >= 0 ? "+" : ""}${decoupling.zscore.toFixed(1)}σ`}
+            {decoupling.displayZscore ??
+              `${decoupling.zscore >= 0 ? "+" : ""}${decoupling.zscore.toFixed(1)}σ`}
           </span>
         }
         tierLabel={decoupling.tier.toUpperCase()}
         thresholdContext={
-          decoupling.zscore >= 1
-            ? "above +1σ — fraying"
-            : decoupling.zscore >= 0
-              ? "above baseline"
-              : "below baseline — adapted"
+          decoAbsent
+            ? (decoupling.reasoning ?? "Decoupling lens unavailable.")
+            : decoupling.zscore >= 1
+              ? "above +1σ — fraying"
+              : decoupling.zscore >= 0
+                ? "above baseline"
+                : "below baseline — adapted"
         }
         delta={decoupling.delta}
         meaning="Aerobic economy slipping vs your 30-day Zone 2 baseline — the same pace is costing more heart-rate."
         sparkline={decoupling.sparkline}
-        sparklineRange={{
-          min: Math.min(...decoupling.sparkline),
-          max: Math.max(...decoupling.sparkline),
-        }}
+        sparklineRange={decoSpark}
         dataAge={`window ${decoupling.windowDays}d`}
         reasoning={decoupling.reasoning}
         formula="Today's efficiency factor (pace ÷ HR) on Z2 effort, z-scored against your rolling 30-day mean and SD on comparable sessions."
@@ -405,6 +414,20 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
       </LineChart>
     </ResponsiveContainer>
   );
+}
+
+/** Min/max for sparkline Y axis; widens flat series so Recharts does not collapse */
+
+function sparklineExtents(vals: number[]) {
+  if (!vals.length) {
+    return { min: 0, max: 1 };
+  }
+  const mn = Math.min(...vals);
+  const mx = Math.max(...vals);
+  if (mn === mx) {
+    return { min: mn - 1e-3, max: mx + 1e-3 };
+  }
+  return { min: mn, max: mx };
 }
 
 function clamp(x: number, lo: number, hi: number): number {

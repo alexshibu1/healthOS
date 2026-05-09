@@ -33,11 +33,13 @@ from typing import Any, Optional
 import pandas as pd
 
 from src.context.flags import get_active_flags, load_context_flags
+from src.diagnostics.ask import active_diagnostic_flags
 
 # ── constants ──────────────────────────────────────────────────────────────────
 
 # Spec §5 — state score bands (lo, hi).  Higher = more training-ready.
 _STATE_BANDS: dict[str, tuple[int, int]] = {
+    "insufficient_data":          (0, 0),
     "illness-risk":               (10, 29),
     "deload":                     (50, 69),
     "accumulating-fatigue":       (30, 49),
@@ -68,6 +70,9 @@ _SCORES_DIR = Path(__file__).resolve().parents[2] / "data" / "scores"
 # Default confidence for unknown/missing lens inputs
 _UNKNOWN_CONF = 0.5
 
+# When all three flagship lenses are unknown/refused — fixed floor (composite-spec §1)
+_INSUFFICIENT_DATA_CONF = 0.3
+
 
 # ── typed input containers ────────────────────────────────────────────────────
 
@@ -85,6 +90,7 @@ class NlrHrvInput:
     nlr_term: float    = 1.0         # NLR / 3.0 — from meta dict
     hrv_term:  float   = 1.0         # baseline / current — from meta dict
     quality_flags: list[str] = field(default_factory=list)
+    cbc_age_days: Optional[int] = None  # from meta when NLR scorer supplies it
 
     @classmethod
     def from_score_day(cls, result: dict) -> "NlrHrvInput":
@@ -97,6 +103,7 @@ class NlrHrvInput:
             nlr_term      = meta.get("nlr_term", 1.0),
             hrv_term      = meta.get("hrv_term", 1.0),
             quality_flags = result.get("quality_flags", []),
+            cbc_age_days  = meta.get("cbc_age_days"),
         )
 
     @property
@@ -150,7 +157,7 @@ class CompositeResult:
     """
     composite-spec §3 output schema.
     """
-    state:            str           # one of 7 states
+    state:            str           # one of 8 states (incl. insufficient_data)
     score:            int           # 0–100, normalized within state band
     primary_signal:   str           # nlr_hrv | sri | ef | convergent | context
     divergence_flags: list[str]     # patterns from skill §4
@@ -167,6 +174,7 @@ def score_day(
     c3: Optional[EfInput]  = None,
     context_flags: Optional[dict[str, bool]] = None,
     *,
+    diagnostic_flags: Optional[dict[str, Any]] = None,
     recent_illness: Optional[bool] = None,
     context_flags_path: Optional[Path] = None,
 ) -> CompositeResult:
@@ -194,10 +202,41 @@ def score_day(
     # ── context ────────────────────────────────────────────────────────────────
     if context_flags is None:
         context_flags = get_active_flags(scoring_date, path=context_flags_path)
-    illness_flag = bool(context_flags.get("illness", False))
+
+    # Merge diagnostic answers (diagnostics override YAML for shared keys)
+    _diag = diagnostic_flags or {}
+    illness_from_diagnostic = (
+        bool(_diag.get("illness", False))
+        and not bool(context_flags.get("illness", False))
+    )
+    merged_context = {**context_flags, **_diag}
+    illness_flag = bool(merged_context.get("illness", False))
 
     if recent_illness is None:
         recent_illness = _detect_recent_illness(scoring_date, context_flags_path)
+
+    # ── all flagship lenses unknown/refused — before §4.1 cascade ─────────────
+    if _all_flagship_lenses_unknown(c1, c2, c3):
+        n_unknown = _count_unknown_flagship_lenses(c1, c2, c3)
+        stale_cbc_fragment = (
+            f"({c1.cbc_age_days}d)"
+            if c1.cbc_age_days is not None
+            else "(unknown)"
+        )
+        reasoning = (
+            "Insufficient data to compute composite. "
+            f"{n_unknown} of 3 flagship lenses returned unknown. "
+            "Most common cause: stale CBC "
+            f"{stale_cbc_fragment} or insufficient HRV baseline window."
+        )
+        return CompositeResult(
+            state            = "insufficient_data",
+            score            = 0,
+            primary_signal   = "convergent",
+            divergence_flags = [],
+            reasoning        = reasoning,
+            confidence       = _INSUFFICIENT_DATA_CONF,
+        )
 
     # ── populate C3.hrv_direction from C1 if caller left it at default ─────────
     if c3.hrv_direction == "unknown" and c1.tier != "unknown":
@@ -218,7 +257,8 @@ def score_day(
     # ── reasoning ─────────────────────────────────────────────────────────────
     reasoning = _build_reasoning(
         state, score, primary_signal, c1, c2, c3,
-        divergence_flags, illness_flag, recent_illness, confidence
+        divergence_flags, illness_flag, recent_illness, confidence,
+        illness_from_diagnostic=illness_from_diagnostic,
     )
 
     return CompositeResult(
@@ -264,7 +304,9 @@ def score_range(
         c3 = c3_results.get(current) or EfInput()
 
         ctx = get_active_flags(current, path=context_flags_path)
+        diag = active_diagnostic_flags(current)
         r = score_day(current, c1, c2, c3, context_flags=ctx,
+                      diagnostic_flags=diag,
                       context_flags_path=context_flags_path)
 
         rows.append({
@@ -283,6 +325,51 @@ def score_range(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_parquet(out_path, index=False)
     return out_df
+
+
+# ── flagship lens coverage (insufficient_data gate, before §4.1) ─────────────
+
+
+def _flagship_lens_unknown_or_refused_c1(c1: NlrHrvInput) -> bool:
+    """C1 reports no usable NLR×HRV classification."""
+    return c1.tier == "unknown"
+
+
+def _flagship_lens_unknown_or_refused_c2(c2: SriInput) -> bool:
+    """C2 (SRI) not yet classifiable."""
+    return c2.regularity_band == "unknown"
+
+
+def _flagship_lens_unknown_or_refused_c3(c3: EfInput) -> bool:
+    """C3 (aerobic decoupling) not yet classifiable."""
+    return c3.decoupling_band == "unknown"
+
+
+def _all_flagship_lenses_unknown(
+    c1: NlrHrvInput,
+    c2: SriInput,
+    c3: EfInput,
+) -> bool:
+    return (
+        _flagship_lens_unknown_or_refused_c1(c1)
+        and _flagship_lens_unknown_or_refused_c2(c2)
+        and _flagship_lens_unknown_or_refused_c3(c3)
+    )
+
+
+def _count_unknown_flagship_lenses(
+    c1: NlrHrvInput,
+    c2: SriInput,
+    c3: EfInput,
+) -> int:
+    n = 0
+    if _flagship_lens_unknown_or_refused_c1(c1):
+        n += 1
+    if _flagship_lens_unknown_or_refused_c2(c2):
+        n += 1
+    if _flagship_lens_unknown_or_refused_c3(c3):
+        n += 1
+    return n
 
 
 # ── state classification ───────────────────────────────────────────────────────
@@ -506,6 +593,8 @@ def _score_in_band(
     spec §5: score = hi − round(severity × (hi − lo)).
     severity 0 → score hi (best within band); severity 1 → score lo (worst).
     """
+    if state == "insufficient_data":
+        return 0
     lo, hi = _STATE_BANDS.get(state, (40, 60))
     severity = _compute_severity(state, c1, c2, c3)
     return max(lo, min(hi, round(hi - severity * (hi - lo))))
@@ -540,6 +629,7 @@ def _geomean(values: list[float]) -> float:
 
 # Action implications per state (spec §4 table)
 _STATE_ACTIONS: dict[str, str] = {
+    "insufficient_data":          "Do not interpret readiness numerically; restore CBC recency and wearable/HRV coverage.",
     "illness-risk":               "Stop training; investigate illness onset.",
     "deload":                     "Cap volume; no high-intensity sessions.",
     "accumulating-fatigue":       "Reduce load; monitor for 3–5 days before reassessing.",
@@ -576,6 +666,8 @@ def _build_reasoning(
     illness_flag: bool,
     recent_illness: bool,
     confidence: float,
+    *,
+    illness_from_diagnostic: bool = False,
 ) -> str:
     """
     composite-spec §8: deterministic reasoning template.
@@ -588,7 +680,12 @@ def _build_reasoning(
 
     # 2. Primary driver
     if primary_signal == "context":
-        ctx_reason = "illness window active" if illness_flag else "recent illness window"
+        if illness_from_diagnostic:
+            ctx_reason = "illness confirmed via diagnostic answer"
+        elif illness_flag:
+            ctx_reason = "illness window active"
+        else:
+            ctx_reason = "recent illness window"
         parts.append(f"Primary signal: context ({ctx_reason}).")
     elif primary_signal == "nlr_hrv":
         if c1.score is not None:

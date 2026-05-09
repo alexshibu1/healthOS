@@ -1,0 +1,112 @@
+questions:
+  - id: recent_illness_check
+    trigger: "divergence=autonomic_leading_nlr_elevated"
+    question: "Did you have any illness symptoms (fever, sore throat, fatigue beyond training) in the past 7 days?"
+    answer_type: binary
+    options:
+      yes_illness: "Yes — illness symptoms present"
+      no: "No"
+    shift_potential: 0.85
+    decay_days: 7
+    effects:
+      yes_illness: {illness: true}
+      no: {}
+    effect_template: "Illness flagged: NLR elevation may reflect active immune response rather than training stress."
+
+  - id: travel_timezone_check
+    trigger: "divergence=circadian_early_warning"
+    question: "Did you cross more than 2 time zones in the past 5 days?"
+    answer_type: binary
+    options:
+      yes_travel: "Yes — significant time-zone shift"
+      no: "No"
+    shift_potential: 0.70
+    decay_days: 5
+    effects:
+      yes_travel: {travel: true}
+      no: {}
+    effect_template: "Travel flagged: circadian disruption expected from time-zone crossing."
+
+  - id: alcohol_night_before
+    trigger: "divergence=autonomic_stress_no_inflammation"
+    question: "Did you consume more than 2 standard drinks last night?"
+    answer_type: binary
+    options:
+      yes_alcohol: "Yes"
+      no: "No"
+    shift_potential: 0.55
+    decay_days: 1
+    effects:
+      yes_alcohol: {alcohol_confound: true}
+      no: {}
+    effect_template: "Alcohol confound flagged: acute HRV suppression without NLR elevation is consistent with alcohol ingestion."
+
+  - id: heat_or_altitude
+    trigger: "divergence=peripheral_environmental"
+    question: "Were you exposed to significant heat (>35°C ambient) or gained >1000m altitude in the past 2 days?"
+    answer_type: binary
+    options:
+      yes_heat: "Yes — heat or altitude exposure"
+      no: "No"
+    shift_potential: 0.50
+    decay_days: 2
+    effects:
+      yes_heat: {heat_confound: true}
+      no: {}
+    effect_template: "Heat/altitude confound flagged: peripheral EF drift and HRV suppression can reflect thermal or hypoxic load."
+
+  - id: injury_or_medication
+    trigger: "divergence=pure_peripheral"
+    question: "Do you have a local muscle/joint injury, or are you taking NSAIDs, corticosteroids, or antihistamines?"
+    answer_type: binary
+    options:
+      yes_injury: "Yes — injury or medication"
+      no: "No"
+    shift_potential: 0.50
+    decay_days: 7
+    effects:
+      yes_injury: {injury: true}
+      no: {}
+    effect_template: "Injury/medication flagged: localized inflammation or pharmacological HRV blunting may explain peripheral EF pattern."
+
+  - id: sleep_environment_change
+    trigger: "divergence=recovery_debt_ef_decay"
+    question: "Did you sleep in an unfamiliar environment (hotel, different bed) in the past 3 nights?"
+    answer_type: binary
+    options:
+      yes_env: "Yes — unfamiliar sleep environment"
+      no: "No"
+    shift_potential: 0.40
+    decay_days: 3
+    effects:
+      yes_env: {travel: true}
+      no: {}
+    effect_template: "Sleep environment change flagged: EF decay plus irregular SRI may reflect first-night effect rather than systemic recovery debt."
+
+  - id: hard_workout_yesterday
+    trigger: "divergence=convergent_stress"
+    question: "Was yesterday a maximum-effort session (race, test set, or RPE >= 9)?"
+    answer_type: binary
+    options:
+      yes_hard: "Yes — high-effort session"
+      no: "No"
+    shift_potential: 0.60
+    decay_days: 2
+    effects:
+      yes_hard: {hard_workout_confound: true}
+      no: {}
+    effect_template: "Hard workout confound flagged: post-maximal-effort HRV crash and transient NLR elevation are expected; not a pathological signal."
+
+  - id: life_stressor
+    trigger: "divergence=lifestyle_driven_systemic_stress"
+    question: "Are you under significant non-training psychological stress (exam, work deadline, relationship event) right now?"
+    answer_type: binary
+    options:
+      yes_stress: "Yes — elevated life stress"
+      no: "No"
+    shift_potential: 0.45
+    decay_days: 7
+    effects:
+      yes_stress: {lifestyle_stress_confound: true}
+      no: {}
+    effect_template: "Life stressor flagged: psychological stress elevates NLR and suppresses HRV via HPA-axis activation."

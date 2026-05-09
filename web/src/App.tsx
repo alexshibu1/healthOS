@@ -51,6 +51,7 @@ function App() {
         <KPICards
           state={data.state}
           todayScore={data.score}
+          todayScoreDisplay={data.todayScoreDisplay}
           todayDelta={data.todayDelta}
           subline={data.subline}
           action={data.action}

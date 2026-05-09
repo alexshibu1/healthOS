@@ -1,0 +1,69 @@
+rules:
+  # High-impact guardrails
+  - trigger: state=deload AND illness_active
+    action: Cap all training at Zone 2
+    skill_ref: §1.2
+    effort: 4
+    impact: HIGH
+    why_template: >-
+      NLR last measured at {nlr_value}, above 3.0 clinical-concern threshold.
+      Kaniganti 2022 showed high-intensity sessions transiently raise NLR ~50%.
+
+  - trigger: sri_score<70
+    action: Anchor sleep onset before {target_time}
+    skill_ref: §2.2
+    effort: 3
+    impact: HIGH
+    why_template: >-
+      SRI {sri_value} below the 70 threshold.
+      Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.
+
+  - trigger: readiness_score<55
+    action: Zero optional sessions for 48h
+    skill_ref: composite-spec §3
+    effort: 4
+    impact: HIGH
+    why_template: >-
+      Composite {readiness_score} below 55 — prioritize recovery primitives.
+
+  - trigger: gap_years>2.0
+    action: Focus on sleep regularity stack (onset + variance)
+    skill_ref: bio-age-spec §2
+    effort: 3
+    impact: HIGH
+    why_template: >-
+      Bio-age gap {gap_years}y suggests sleep regularity is dragging the proxy.
+
+  # Moderate / contextual
+  - trigger: state=deload AND sri_score>=75
+    action: Protect sleep window before adding volume
+    skill_ref: §2.2
+    effort: 3
+    impact: MED
+    why_template: >-
+      Deload state but SRI holding at {sri_value}; prioritize rhythm stability.
+
+  - trigger: nlr_value>=3.0
+    action: Request repeat CBC before intensity blocks
+    skill_ref: §1.2
+    effort: 2
+    impact: MED
+    why_template: >-
+      NLR {nlr_value} sits at or above clinical-concern cutoff pending confirmation.
+
+  - trigger: illness_active AND sri_score>=80
+    action: Keep easy movement only until inflammatory markers confirm recovery
+    skill_ref: §1.2
+    effort: 2
+    impact: MED
+    why_template: >-
+      Illness flag active while SRI reads {sri_value}; maintain conservative load.
+
+  # Lower tier behavioral nudge
+  - trigger: subjective_energy_1_10<5
+    action: Single recovery day — walk + protein, no optional training
+    skill_ref: §1.5
+    effort: 2
+    impact: LOW
+    why_template: >-
+      Energy reads {subjective_energy_1_10}/10; defer stacking strain.

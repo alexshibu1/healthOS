@@ -8,6 +8,8 @@ export const STATE_TO_COLOR: Record<SnapshotState, StateColor> = {
   "autonomic-recovery-leading": "blue",
   "peripheral-strain": "purple",
   "illness-risk": "rose",
+  "accumulating-fatigue": "amber",
+  insufficient_data: "amber",
 };
 
 export const STATE_LABEL: Record<SnapshotState, string> = {
@@ -18,6 +20,8 @@ export const STATE_LABEL: Record<SnapshotState, string> = {
   "autonomic-recovery-leading": "AUTONOMIC RECOVERY LEADING",
   "peripheral-strain": "PERIPHERAL STRAIN",
   "illness-risk": "ILLNESS RISK",
+  "accumulating-fatigue": "ACCUMULATING FATIGUE",
+  insufficient_data: "INSUFFICIENT DATA",
 };
 
 interface ColorBundle {
@@ -105,6 +109,7 @@ export const FLAGSHIP_TIER_TO_COLOR = {
   green: "green",
   caution: "amber",
   deload: "red",
+  unknown: "amber",
   irregular: "amber",
   moderate: "amber",
   high: "green",

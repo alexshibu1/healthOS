@@ -440,6 +440,9 @@ def score_day(
                 f"(need {_MIN_BASELINE_DAYS}). Spec §4.4: hrv_baseline_insufficient."
             ),
             "quality_flags": [],
+            "meta": {
+                "cbc_age_days": int(cbc["cbc_age_days"]),
+            },
         }
 
     baseline_vals = [hrv_daily[d][0] for d in baseline_dates]
@@ -541,6 +544,7 @@ def score_day(
             "nlr":                   round(cbc["nlr"], 4),
             "hrv_baseline_7d":       round(hrv_baseline_7d, 4),
             "hrv_current_effective": round(hrv_current_effective, 4),
+            "cbc_age_days":          int(cbc["cbc_age_days"]),
         },
     }
 

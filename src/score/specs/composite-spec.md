@@ -15,6 +15,16 @@ a score normalized *within* that state. You cannot collapse "deload because NLR
 is elevated while HRV is recovering" and "deload because everything is degraded"
 into the same number without destroying the interpretation.
 
+**Insufficient-data gate (before §4.1):** If all three flagship lenses (C1 NLR×HRV,
+C2 SRI, C3 aerobic decoupling) return **unknown** — i.e. each lens has no usable
+classification band — the composite must **not** fall through to a nominal state
+such as `recovered`. Output **`insufficient_data`** instead: score **0** (band
+0–0), confidence fixed at **0.3** (floor), primary signal **`convergent`**, empty
+divergence flags, and a deterministic reasoning string stating how many of three
+lenses were unknown and naming stale CBC age (when provided via C1 meta) vs.
+insufficient HRV baseline as common causes. This is a structural coverage rule,
+not a threshold retune.
+
 ## 2. Inputs
 
 Three lens outputs (each as a typed dict) + profile + active context flags.
@@ -63,7 +73,7 @@ in the divergence matrix.
 
 ```python
 {
-    "state":            str,         # one of 7 states (§4)
+    "state":            str,         # one of 8 states (§4)
     "score":            int,         # 0–100, normalized within state band (§5)
     "primary_signal":   str,         # "nlr_hrv" | "sri" | "ef" | "convergent" | "context"
     "divergence_flags": list[str],   # patterns from skills/health-reasoning.md §4
@@ -74,10 +84,11 @@ in the divergence matrix.
 
 ## 4. States
 
-Seven states, ordered from most to least training-restricting:
+Eight states, ordered from most to least training-restricting:
 
 | state | meaning | primary action implication |
 |---|---|---|
+| `insufficient_data` | No flagship lens produced a usable band (all unknown) | Do not interpret readiness numerically; restore CBC recency and wearable/HRV coverage |
 | `illness-risk` | Active illness context + systemic strain | Stop training; investigate illness |
 | `deload` | Multiple systems degraded or C1 in deload (convergent) | Cap volume; no high-intensity |
 | `accumulating-fatigue` | Trending toward deload; one or two systems moderate | Reduce load; monitor for 3–5 days |
@@ -87,6 +98,16 @@ Seven states, ordered from most to least training-restricting:
 | `recovered` | All systems nominal; no recent concern | Unrestricted training |
 
 ### 4.1 State decision rules (checked in priority order)
+
+**Rule 0 — insufficient_data (all flagship lenses unknown):**
+```
+C1.tier == "unknown"
+AND C2.regularity_band == "unknown"
+AND C3.decoupling_band == "unknown"
+→ state insufficient_data, score 0, confidence 0.3, primary_signal = "convergent"
+(reasoning template fixed in implementation — cites count of unknown lenses and CBC age when present)
+```
+Checked **before** Rule 1. Does not apply when any lens has a non-unknown band.
 
 **Rule 1 — illness-risk:**
 ```
@@ -156,6 +177,7 @@ Score ∈ [0, 100]. Higher always means more training-ready.
 
 | state | band | lo | hi |
 |---|---|---|---|
+| insufficient_data | 0–0 | 0 | 0 |
 | illness-risk | 10–29 | 10 | 29 |
 | deload | 50–69 | 50 | 69 |
 | accumulating-fatigue | 30–49 | 30 | 49 |
@@ -254,7 +276,7 @@ Deterministic: same inputs → same string.
 | column | type | notes |
 |---|---|---|
 | date | date | scoring date |
-| state | str | one of 7 states |
+| state | str | one of 8 states |
 | score | int | 0–100 |
 | primary_signal | str | nlr_hrv \| sri \| ef \| convergent \| context |
 | divergence_flags | str | JSON array |

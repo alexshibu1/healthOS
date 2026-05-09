@@ -14,6 +14,9 @@ interface KPICardsProps {
   /* — Today (the secondary widget in this monthly report) — */
   state: SnapshotState;
   todayScore: number;
+  /** Em dash headline when composite refused (e.g. insufficient_data). */
+
+  todayScoreDisplay?: string;
   todayDelta: Delta;
   subline: string;
   action: string;
@@ -43,6 +46,7 @@ interface KPICardsProps {
 export function KPICards({
   state,
   todayScore,
+  todayScoreDisplay,
   todayDelta,
   subline,
   action,
@@ -88,6 +92,7 @@ export function KPICards({
           <TodayCard
             stateTitle={stateTitle}
             todayScore={todayScore}
+            todayScoreDisplay={todayScoreDisplay}
             todayDelta={todayDelta}
             subline={subline}
             action={action}
@@ -508,6 +513,8 @@ function MonthStripLegend({ trajectory }: { trajectory: MonthlyTrajectory }) {
     return acc;
   }, {});
   const order: SnapshotState[] = [
+    "insufficient_data",
+    "accumulating-fatigue",
     "cleared",
     "recovered",
     "autonomic-recovery-leading",
@@ -544,6 +551,11 @@ function MonthStripLegend({ trajectory }: { trajectory: MonthlyTrajectory }) {
 interface TodayCardProps {
   stateTitle: string;
   todayScore: number;
+
+  /** When composite cannot emit numeric headline (insufficient inputs). */
+
+
+  todayScoreDisplay?: string;
   todayDelta: Delta;
   subline: string;
   action: string;
@@ -553,6 +565,7 @@ interface TodayCardProps {
 function TodayCard({
   stateTitle,
   todayScore,
+  todayScoreDisplay,
   todayDelta,
   subline,
   action,
@@ -590,11 +603,13 @@ function TodayCard({
       {/* Score row — smaller than the Month hero, this is a sidebar */}
       <div className="mt-6 flex items-baseline gap-3">
         <span className="display tabular text-card font-light leading-none text-ink">
-          {todayScore}
+          {todayScoreDisplay ?? todayScore}
         </span>
-        <span className="display text-base font-light text-ink-subtle">
-          / 100
-        </span>
+        {!todayScoreDisplay ? (
+          <span className="display text-base font-light text-ink-subtle">
+            / 100
+          </span>
+        ) : null}
         <span
           className={`ml-auto font-mono tabular text-[10px] ${
             todayDelta.value > 0
