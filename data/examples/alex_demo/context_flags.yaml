@@ -1,0 +1,9 @@
+# Synthetic demo windows — ties synthetic CBC episode + composite narratives.
+illness_windows:
+  - start: "2026-03-25"
+    end: "2026-04-05"
+    note: "Synthetic viral GI overlap — demo context only."
+
+travel_windows: []
+
+injury_windows: []

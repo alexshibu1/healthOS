@@ -37,6 +37,7 @@ Call once per scoring date from scorers; no decay or expiry logic here.
 
 from __future__ import annotations
 
+import os
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -50,6 +51,10 @@ except ImportError as e:  # pragma: no cover
 
 
 def _default_flags_path() -> Path:
+    for key in ("HEALTHOS_CONTEXT_FLAGS", "CONTEXT_FLAGS"):
+        env = os.environ.get(key)
+        if env:
+            return Path(env).expanduser().resolve()
     return Path(__file__).resolve().parents[2] / "data" / "context_flags.yaml"
 
 

@@ -13,6 +13,7 @@ import argparse
 import calendar
 import json
 import math
+import os
 import re
 import sys
 from datetime import date, timedelta
@@ -278,8 +279,37 @@ def _tier_from_sri_score(score_val: float) -> str:
     return "irregular"
 
 
+def _profile_path(repo_root: Path) -> Path:
+    env = os.environ.get("HEALTHOS_PROFILE")
+    if env:
+        return Path(env).expanduser().resolve()
+    return repo_root / "data" / "profile.yaml"
+
+
+def _context_flags_path(repo_root: Path) -> Path:
+    for key in ("HEALTHOS_CONTEXT_FLAGS", "CONTEXT_FLAGS"):
+        env = os.environ.get(key)
+        if env:
+            return Path(env).expanduser().resolve()
+    return repo_root / "data" / "context_flags.yaml"
+
+
+def _trends_dir(repo_root: Path) -> Path:
+    env = os.environ.get("HEALTHOS_TRENDS_DIR")
+    if env:
+        return Path(env).expanduser().resolve()
+    return repo_root / "data" / "trends"
+
+
+def _interventions_dir(repo_root: Path) -> Path:
+    env = os.environ.get("HEALTHOS_INTERVENTIONS_DIR")
+    if env:
+        return Path(env).expanduser().resolve()
+    return repo_root / "data" / "interventions"
+
+
 def load_profile_yaml(repo_root: Path) -> Mapping[str, Any]:
-    pp = repo_root / "data" / "profile.yaml"
+    pp = _profile_path(repo_root)
     if not pp.is_file():
         raise SnapshotBuildError(pp, "Create data/profile.yaml with chronological age:int.")
     return yaml.safe_load(pp.read_text(encoding="utf-8")) or {}
@@ -405,7 +435,7 @@ def _drivers_from_context(repo_root: Path, scoring_date: date, nlr_row: Mapping[
             "state": "amber" if cb_age > 45 else "green",
         })
 
-    ctx_path = repo_root / "data" / "context_flags.yaml"
+    ctx_path = _context_flags_path(repo_root)
     if ctx_path.is_file():
         loaded = yaml.safe_load(ctx_path.read_text(encoding="utf-8")) or {}
         pairs = (
@@ -624,7 +654,7 @@ def _strip_none_shallow(flagship: Mapping[str, Any]) -> dict[str, Any]:
 def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[str, Any]:
     rr = Path(repo_root).resolve() if repo_root else _REPO_ROOT.resolve()
 
-    ctx_yaml = rr / "data" / "context_flags.yaml"
+    ctx_yaml = _context_flags_path(rr)
     if not ctx_yaml.is_file():
         raise SnapshotBuildError(ctx_yaml, "Create data/context_flags.yaml (even if windows empty []).")
 
@@ -777,7 +807,7 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
         else:
             seven_days.append("insufficient_data")
 
-    trends_fp = rr / "data" / "trends" / f"{y:04d}-{mo:02d}.json"
+    trends_fp = _trends_dir(rr) / f"{y:04d}-{mo:02d}.json"
 
     readiness_extra = ""
     if trends_fp.is_file():
@@ -833,18 +863,21 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
 
     divergence_obj: dict[str, Any] = {
         "triggered": bool(insufficient_data or drivers_all),
-        "pattern": div_flags[0] if div_flags else ("insufficient_data" if insufficient_data else None),
-        "interpretation": None,
+        "pattern": div_flags[0] if div_flags else ("insufficient_data" if insufficient_data else ""),
         "skillRef": "skills/health-reasoning.md §4 divergence matrix",
         "reasoning": str(row_c.get("reasoning") or ""),
         "drivers": drivers_all,
-        "question": dq,
     }
+    if dq is not None:
+        divergence_obj["question"] = dq
 
     nlr_series_tail = nlr.loc[nlr["date"] <= score_date].tail(14)["score"]
 
+    _nlr_sc = pd.to_numeric(nlr_d.get("score"), errors="coerce")
+    _nlr_score_clean = float(_nlr_sc) if _nlr_sc == _nlr_sc else 0.0
+
     flagship_nlr: dict[str, Any] = {
-        "score": round(float(pd.to_numeric(nlr_d.get("score"), errors="coerce") or 0.0), 4),
+        "score": round(_nlr_score_clean, 4),
         "tier": tier_nlr if tier_nlr in {"green", "caution", "deload"} else "unknown",
         "sparkline": _sparkline(nlr_series_tail.reset_index(drop=True), 14),
 
@@ -936,7 +969,7 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
         "subjective_energy_1_10": 6,
         "window_label_short": f"{mo_abbr}-{score_date.day} cohort",
     }
-    ints_fp = rr / "data" / "interventions" / f"{score_date.isoformat()}.json"
+    ints_fp = _interventions_dir(rr) / f"{score_date.isoformat()}.json"
 
     ints = load_interventions_file_or_rank(rr, ints_fp, env_intervention)
 
@@ -983,6 +1016,17 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
     return payload
 
 
+def _scrub_nonfinite(obj: Any) -> Any:
+    """JSON has no NaN/Inf; coerce to None for strict parsers / TypeScript."""
+    if isinstance(obj, dict):
+        return {k: _scrub_nonfinite(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_scrub_nonfinite(v) for v in obj]
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    return obj
+
+
 def _json_serialize_default(obj: Any) -> Any:
     if isinstance(obj, date):
         return obj.isoformat()
@@ -1004,8 +1048,9 @@ def main() -> None:
         sys.exit(1)
     outp = Path(args.out).expanduser().resolve()
     outp.parent.mkdir(parents=True, exist_ok=True)
+    clean = _scrub_nonfinite(blob)
     outp.write_text(
-        json.dumps(blob, indent=2, ensure_ascii=False, default=_json_serialize_default),
+        json.dumps(clean, indent=2, ensure_ascii=False, default=_json_serialize_default),
         encoding="utf-8",
     )
     print(f"Wrote {outp}")

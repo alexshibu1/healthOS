@@ -13,13 +13,34 @@ By fusing data sources that no consumer app combines, healthOS turns fragmented 
 - **Workout pace/HR decoupling** — TrainingPeaks computes this but it's coach-facing
 - **Sleep regularity** — Phillips SRI is peer-reviewed; no consumer app implements it
 
-## Three Flagship Metrics
+## Pipeline
 
-1. **NLR × HRV Training-Readiness Score** — Inflammatory markers (CBC) meet autonomic state (HRV)
-2. **Sleep Regularity Index (SRI)** — Phillips formula applied to personal sleep/wake timestamps
-3. **Aerobic Decoupling Trend** — Pace:HR efficiency Z-score over time, with cross-interpretation against HRV
+End-to-end flow from exports to the local web report. The **four scorers** are NLR×HRV readiness, SRI, aerobic decoupling, and the composite readiness layer; **bio-age** runs on the daily systemic CSV after that (see `Makefile` for the exact order). Environment variables such as `RAWDATA_ROOT` and `HEALTHOS_PROFILE` point the same commands at your tree or at the committed demo slice.
 
-See the detailed specs in `src/score/specs/` for full formulas and implementation rules.
+```mermaid
+flowchart LR
+  rawdata["rawdata/"] --> ingest["ingest"]
+  ingest --> scorers["Scorers (4)"]
+  scorers --> trends["trends / interventions"]
+  trends --> snapshot["snapshot_builder"]
+  snapshot --> web["Web report"]
+```
+
+## Demo (web report)
+
+Rendered after `make demo` (ingest through `snapshot_builder`, then `npm run dev` in `web/`). The page reads `web/src/data/snapshot.json`.
+
+![healthOS web report (demo snapshot)](docs/readme-demo.png)
+
+## Three flagship metrics
+
+Each metric has a full computable spec under `src/score/specs/`. The paragraphs below are the *why*; citations ground the interpretive claims.
+
+**NLR × HRV training-readiness.** Neutrophil-to-lymphocyte ratio (NLR) condenses innate vs adaptive immune balance into one number, while HRV reflects parasympathetic tone; together they stress-test the idea that autonomic recovery and inflammatory state can diverge or align across days (mechanism and exercise context: e.g. Lee, Sennels & Berg, *Eur J Appl Physiol* 2021; Walsh / Gleeson line on N/L as exercise-stress signal). Population NLR distributions and “normal” ranges are reported in working-age adults (Forget *et al.*, 2017), which helps calibrate how extreme a draw is before it meets wearable HRV on the same calendar.
+
+**Sleep Regularity Index (SRI).** SRI measures day-to-day *consistency* of sleep and wake at matched clock times—not duration or subjective quality—so it picks up circadian mistiming that total sleep time can miss. The canonical 0–100 construction and the undergraduate cohort validation come from Phillips *et al.*, *Scientific Reports* 2017. In large prospective work, lower SRI tracks higher mortality hazard; for example Windred *et al.*, *Sleep* 2024 (UK Biobank, *n* = 60,977) report that SRI < 70 is associated with substantially higher all-cause mortality than higher SRI, with SRI often outperforming sleep duration as a predictor.
+
+**Aerobic decoupling (pace:HR, trend).** At steady aerobic power, heart rate drifts upward as stroke volume and plasma volume fall with dehydration and thermoregulatory strain, so the pace-to-HR relationship is an integrative read of economy and stress on that day. González-Alonso & Coyle (*J Appl Physiol* 1992, PMID 1447078) showed graded dehydration linearly increasing HR and reducing stroke volume; later running-economy reviews (e.g. Saunders *et al.*, *Sports Med* 2004; Foster *et al.*) frame pace/HR and efficiency as sensitive to training, environment, and fatigue. healthOS uses a Z-score trend over comparable sessions, with cross-reads to HRV where the spec says to (see `aerobic-decoupling-spec.md`).
 
 ## Data Sources & Quirks
 
@@ -37,7 +58,33 @@ See the detailed specs in `src/score/specs/` for full formulas and implementatio
 - **Bio-age proxy is illustrative**, not medical guidance. We're honest about uncertainty.
 - **Single headline number** with drill-downs underneath for interpretation.
 
-## Architecture
+## Tech stack
+
+- **Python 3.9+** — ingest, scoring, trends, interventions, snapshot JSON (`src/`, `Makefile`).
+- **pandas / NumPy / SciPy** — tabular merges, rolling stats, scoring math.
+- **YAML + CSV (+ Markdown blood panels)** — inputs under `rawdata/` (see `src/ingest/schema.md`).
+- **Parquet and intermediate artifacts** — scorer outputs on disk; paths configurable via `HEALTHOS_*` env vars where implemented.
+- **Web UI** — **Vite 5**, **React 19**, **TypeScript**, **Tailwind CSS**, **Recharts**, **Framer Motion** (`web/`).
+
+## Run the demo
+
+One command from the repo root runs the full demo pipeline on committed **`data/examples/alex_demo`** (mirrors a `rawdata/` layout) and starts the Vite dev server:
+
+```bash
+make demo
+```
+
+Override dates by passing Make variables, e.g. `SINCE`, `UNTIL`, `MONTH` (see `Makefile`). To rebuild the demo CSV slice from your machine’s private `rawdata/`, use `make demo-dataset` (see `scripts/build_alex_demo_dataset.py`).
+
+## Run on your own data
+
+1. **Directory layout** — Point **`RAWDATA_ROOT`** at a folder with the same *shape* as the demo: Amazfit Helio exports under an `amazfit helio/` tree (`SLEEP`, `SLEEP_MINUTE`, `HEARTRATE_AUTO`, `ACTIVITY`, `ACTIVITY_MINUTE`, …), **`strava/activities.csv`**, JeFit export **`bigAppleALEX_*.csv`** at the root of `RAWDATA_ROOT`, **`blood_panels/*.md`**, plus optional **`profile.yaml`**, **`context_flags.yaml`**, and a generated or maintained **`systemic_daily.csv`** for month-level trends (see `python -m src.ingest.load_all --help` and per-loader expectations in `src/ingest/`).
+
+2. **Run the same modules as in `Makefile` `demo`** — Set `RAWDATA_ROOT`, `CONTEXT_FLAGS`, `HEALTHOS_PROFILE` and execute, in order: `src.ingest.load_all`, `src.score.nlr_hrv_readiness`, `src.score.sri`, `src.score.aerobic_decoupling`, `src.score.composite`, `src.score.bio_age`, `src.trends`, `src.interventions`, `src.report.snapshot_builder` (writing `web/src/data/snapshot.json`), then `cd web && npm run dev`.
+
+3. **Defaults** — With no override, loaders read **`rawdata/`** at the repo root (`src/ingest/config.py`).
+
+## Repository layout
 
 ```
 src/
@@ -192,6 +239,6 @@ See [CLAUDE.md](./CLAUDE.md) for development guidelines.
 
 MIT License — See LICENSE file for details.
 
----
+## Not a medical device
 
-**healthOS** is a personal data intelligence project. It is not medical advice. Always consult healthcare professionals for health decisions.
+**healthOS is a personal exploration and analysis tool for your own exports.** It is **not** a medical device, not a diagnostic, and not a substitute for professional care. Composite scores, the bio-age proxy, NLR×HRV, SRI, and aerobic trends are **illustrative** combinations of your data and transparent formulas—use them to think and plan, not to self-treat or override clinical judgment. Always consult qualified healthcare professionals for medical decisions.

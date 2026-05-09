@@ -32,6 +32,7 @@ df. They are printed to stderr at the end so you know what was dropped.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -264,7 +265,12 @@ def _cli() -> None:
     )
     args = parser.parse_args()
 
-    rawdata_root = Path(args.rawdata_root) if args.rawdata_root else None
+    if args.rawdata_root:
+        rawdata_root = Path(args.rawdata_root)
+    elif os.environ.get("RAWDATA_ROOT"):
+        rawdata_root = Path(os.environ["RAWDATA_ROOT"])
+    else:
+        rawdata_root = None
 
     print(f"Loading all sources (since={args.since or 'all'}) …", file=sys.stderr)
     df, episodic = load_all(rawdata_root=rawdata_root, since=args.since)

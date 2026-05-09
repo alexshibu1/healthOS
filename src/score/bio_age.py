@@ -16,12 +16,17 @@ This module intentionally uses transparent heuristics, not ML.
 
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
 import pandas as pd
+
+from src.context.profile import load_profile
+from src.score.paths import scores_dir as _scores_dir_fn
 
 
 @dataclass(frozen=True)
@@ -263,4 +268,43 @@ def score_timeseries_to_parquet(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(out_path, index=False)
     return out
+
+
+def _scores_dir() -> Path:
+    return _scores_dir_fn()
+
+
+def _bio_age_cli() -> None:
+    ap = argparse.ArgumentParser(description="Bio-age proxy parquet from systemic daily CSV.")
+    ap.add_argument(
+        "--daily-csv",
+        type=Path,
+        required=True,
+        help="CSV with date,sri_score,wake_hrv_ms,wake_rhr_bpm columns.",
+    )
+    ap.add_argument(
+        "--chronological-age",
+        type=float,
+        default=None,
+        help="Age in years (default: profile age via HEALTHOS_PROFILE or data/profile.yaml).",
+    )
+    ap.add_argument("--output", type=Path, default=None)
+    args = ap.parse_args()
+
+    age = args.chronological_age
+    if age is None:
+        prof = load_profile()
+        age = float(prof.age)
+
+    outp = args.output or (_scores_dir() / "bio_age.parquet")
+    score_timeseries_to_parquet(
+        input_csv=args.daily_csv,
+        chronological_age=age,
+        output_parquet=outp,
+    )
+    print(f"Wrote {outp}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    _bio_age_cli()
 

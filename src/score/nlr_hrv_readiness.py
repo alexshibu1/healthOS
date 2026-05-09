@@ -20,7 +20,11 @@ Design rules (CLAUDE.md):
 
 from __future__ import annotations
 
+import argparse
+import json
 import math
+import os
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 from statistics import mean, median, stdev
@@ -29,7 +33,9 @@ from typing import Optional
 import pandas as pd
 
 from src.context.flags import get_active_flags
+from src.ingest.load_all import load_all
 from src.ingest.schema import Observation
+from src.score.paths import scores_dir as _scores_dir_fn
 
 # ── constants ──────────────────────────────────────────────────────────────────
 
@@ -49,8 +55,8 @@ _STALE_STALE_DAYS        = 60     # spec §4.1 second tier
 _MULT_HRV_ANOMALY        = 0.9    # spec §4.2
 _MULT_HRV_IMPUTED        = 0.85   # spec §4.4
 
-# Data output directory  (project_root / data / scores)
-_SCORES_DIR = Path(__file__).resolve().parents[2] / "data" / "scores"
+def _scores_dir() -> Path:
+    return _scores_dir_fn()
 
 # Metric kind to look for in the unified DataFrame for HRV
 HRV_METRIC_KIND = "hrv"
@@ -581,13 +587,78 @@ def score_range(
             "tier":       result["tier"],
             "confidence": result["confidence"],
             "reasoning":  result["reasoning"],
+            "meta_json": json.dumps(result.get("meta") or {}, separators=(",", ":")),
+            "quality_flags_json": json.dumps(result.get("quality_flags") or [], separators=(",", ":")),
         })
         current += timedelta(days=1)
 
     out_df = pd.DataFrame(rows)
 
-    out_path = output_path or (_SCORES_DIR / "nlr_hrv.parquet")
+    out_path = output_path or (_scores_dir() / "nlr_hrv.parquet")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_parquet(out_path, index=False)
 
     return out_df
+
+
+def _cli_rawdata_root(cli_val: str | None) -> Path | None:
+    if cli_val:
+        return Path(cli_val)
+    env = os.environ.get("RAWDATA_ROOT")
+    return Path(env) if env else None
+
+
+def _cli_context_flags(cli_val: str | None) -> Path | None:
+    if cli_val:
+        return Path(cli_val)
+    for key in ("HEALTHOS_CONTEXT_FLAGS", "CONTEXT_FLAGS"):
+        env = os.environ.get(key)
+        if env:
+            return Path(env)
+    return None
+
+
+def _score_range_cli() -> None:
+    ap = argparse.ArgumentParser(description="NLR×HRV parquet writer.")
+    ap.add_argument("--since", required=True, help="Inclusive ISO date YYYY-MM-DD (timeseries filter).")
+    ap.add_argument(
+        "--until",
+        default=None,
+        help="Inclusive end date (default: latest observation date in ingest).",
+    )
+    ap.add_argument("--rawdata-root", default=None, help="Override RAWDATA_ROOT.")
+    ap.add_argument(
+        "--context-flags",
+        default=None,
+        help="Path to context_flags.yaml (or use CONTEXT_FLAGS / HEALTHOS_CONTEXT_FLAGS env).",
+    )
+    args = ap.parse_args()
+
+    root = _cli_rawdata_root(args.rawdata_root)
+    df, episodic = load_all(rawdata_root=root, since=args.since)
+
+    start_d = date.fromisoformat(args.since)
+    if args.until:
+        end_d = date.fromisoformat(args.until)
+    elif not df.empty:
+        end_d = pd.Timestamp(df["ts_utc"].max()).date()
+    else:
+        end_d = start_d
+
+    if end_d < start_d:
+        print("nlr_hrv_readiness: empty range — extending end to start date.", file=sys.stderr)
+        end_d = start_d
+
+    ctx = _cli_context_flags(args.context_flags)
+    score_range(
+        start_d,
+        end_d,
+        df,
+        episodic,
+        context_flags_path=ctx,
+    )
+    print(f"Wrote {_scores_dir() / 'nlr_hrv.parquet'}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    _score_range_cli()

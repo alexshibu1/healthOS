@@ -1,5 +1,9 @@
 rawdata/
 data/personal/
+data/scores/
+data/trends/
+data/interventions/
+data/diagnostic_answers.csv
 
 # Claude Code local worktrees / agent scratch (not project source)
 .claude/

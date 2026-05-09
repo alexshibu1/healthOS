@@ -23,8 +23,11 @@ Output: CompositeResult dataclass + parquet at data/scores/composite.parquet
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
+import os
+import sys
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -34,6 +37,7 @@ import pandas as pd
 
 from src.context.flags import get_active_flags, load_context_flags
 from src.diagnostics.ask import active_diagnostic_flags
+from src.score.paths import scores_dir as _scores_dir_fn
 
 # ── constants ──────────────────────────────────────────────────────────────────
 
@@ -65,7 +69,21 @@ _DIVERGENCE_MODS: dict[str, float] = {
 }
 
 _RECENT_ILLNESS_WINDOW_DAYS = 14   # "cleared" detection window
-_SCORES_DIR = Path(__file__).resolve().parents[2] / "data" / "scores"
+
+
+def _scores_dir() -> Path:
+    return _scores_dir_fn()
+
+
+_ADO_TIER_TO_COMPOSITE: dict[str, str] = {
+    "fraying": "high",
+    "drift": "moderate",
+    "adapted": "good",
+    "high": "high",
+    "moderate": "moderate",
+    "good": "good",
+    "unknown": "unknown",
+}
 
 # Default confidence for unknown/missing lens inputs
 _UNKNOWN_CONF = 0.5
@@ -321,10 +339,151 @@ def score_range(
         current += timedelta(days=1)
 
     out_df = pd.DataFrame(rows)
-    out_path = output_path or (_SCORES_DIR / "composite.parquet")
+    out_path = output_path or (_scores_dir() / "composite.parquet")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_parquet(out_path, index=False)
     return out_df
+
+
+def _nlr_row_to_score_day(row: pd.Series) -> dict[str, Any]:
+    meta: dict[str, Any] = {}
+    mj = row.get("meta_json")
+    if mj is not None and pd.notna(mj):
+        meta = json.loads(str(mj))
+    qfj = row.get("quality_flags_json")
+    qf: list[str] = []
+    if qfj is not None and pd.notna(qfj):
+        qf = list(json.loads(str(qfj)))
+    return {
+        "tier": row["tier"],
+        "score": row["score"],
+        "confidence": row["confidence"],
+        "reasoning": row["reasoning"],
+        "meta": meta,
+        "quality_flags": qf,
+    }
+
+
+def _sri_row_to_input(row: pd.Series) -> SriInput:
+    tier = str(row.get("tier") or "").lower()
+    band = tier if tier in ("irregular", "moderate", "high") else "unknown"
+    sv = pd.to_numeric(row.get("score"), errors="coerce")
+    return SriInput(
+        regularity_band=band,
+        sri=float(sv) if sv == sv else None,
+        confidence=float(row.get("confidence") or _UNKNOWN_CONF),
+    )
+
+
+def _ado_row_to_input(row: pd.Series) -> EfInput:
+    cb_raw = row.get("composite_band")
+    tier = str(row.get("tier") or "").lower()
+    if cb_raw is not None and pd.notna(cb_raw):
+        band = str(cb_raw).lower()
+    else:
+        band = _ADO_TIER_TO_COMPOSITE.get(tier, "unknown")
+    z = pd.to_numeric(row.get("zscore"), errors="coerce")
+    return EfInput(
+        decoupling_band=band if band in ("high", "moderate", "good", "unknown") else "unknown",
+        ef_zscore=float(z) if z == z else None,
+        confidence=float(row.get("confidence") or _UNKNOWN_CONF),
+    )
+
+
+def score_range_from_parquets(
+    start_date: date,
+    end_date: date,
+    *,
+    nlr_path: Path,
+    sri_path: Path,
+    ado_path: Path,
+    context_flags_path: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+) -> pd.DataFrame:
+    """
+    Build composite parquet by joining flagship scorer outputs on disk.
+
+    Expects ``nlr_hrv.parquet`` rows to include ``meta_json`` + ``quality_flags_json``
+    (written by ``nlr_hrv_readiness.score_range``) so :class:`NlrHrvInput` matches
+    the in-memory scorer path.
+    """
+    nlr = pd.read_parquet(nlr_path)
+    sp = pd.read_parquet(sri_path)
+    ad = pd.read_parquet(ado_path)
+
+    nlr["date"] = pd.to_datetime(nlr["date"]).dt.date
+    sp["date"] = pd.to_datetime(sp["date"]).dt.date
+    ad["date"] = pd.to_datetime(ad["date"]).dt.date
+
+    c1_results: dict[date, dict[str, Any]] = {}
+    for _, row in nlr.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c1_results[d] = _nlr_row_to_score_day(row)
+
+    c2_results: dict[date, SriInput] = {}
+    for _, row in sp.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c2_results[d] = _sri_row_to_input(row)
+
+    c3_results: dict[date, EfInput] = {}
+    for _, row in ad.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c3_results[d] = _ado_row_to_input(row)
+
+    return score_range(
+        start_date,
+        end_date,
+        c1_results,
+        c2_results=c2_results,
+        c3_results=c3_results,
+        context_flags_path=context_flags_path,
+        output_path=output_path,
+    )
+
+
+def _composite_cli() -> None:
+    ap = argparse.ArgumentParser(description="Composite parquet from flagship parquets.")
+    ap.add_argument("--since", required=True)
+    ap.add_argument("--until", default=None, help="Inclusive end date (default: max date in nlr parquet).")
+    ap.add_argument("--scores-dir", type=Path, default=None, help="Directory with *.parquet (default HEALTHOS_SCORES_DIR or data/scores).")
+    ap.add_argument("--context-flags", default=None)
+    args = ap.parse_args()
+
+    sd = Path(args.scores_dir).resolve() if args.scores_dir else _scores_dir()
+
+    nlr_p = sd / "nlr_hrv.parquet"
+    sri_p = sd / "sri.parquet"
+    ado_p = sd / "aerobic_decoupling.parquet"
+
+    nlr = pd.read_parquet(nlr_p)
+    start_d = date.fromisoformat(args.since)
+    if args.until:
+        end_d = date.fromisoformat(args.until)
+    else:
+        end_d = pd.to_datetime(nlr["date"]).dt.date.max()
+
+    ctx: Optional[Path] = None
+    if args.context_flags:
+        ctx = Path(args.context_flags)
+    else:
+        for key in ("HEALTHOS_CONTEXT_FLAGS", "CONTEXT_FLAGS"):
+            env = os.environ.get(key)
+            if env:
+                ctx = Path(env)
+                break
+
+    score_range_from_parquets(
+        start_d,
+        end_d,
+        nlr_path=nlr_p,
+        sri_path=sri_p,
+        ado_path=ado_p,
+        context_flags_path=ctx,
+    )
+    print(f"Wrote {sd / 'composite.parquet'}", file=sys.stderr)
 
 
 # ── flagship lens coverage (insufficient_data gate, before §4.1) ─────────────
@@ -790,3 +949,7 @@ def _fill_hrv_direction(c3: EfInput, c1: NlrHrvInput) -> EfInput:
         confidence             = c3.confidence,
         quality_flags          = list(c3.quality_flags),
     )
+
+
+if __name__ == "__main__":
+    _composite_cli()
