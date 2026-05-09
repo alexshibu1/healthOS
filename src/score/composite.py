@@ -23,8 +23,11 @@ Output: CompositeResult dataclass + parquet at data/scores/composite.parquet
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
+import os
+import sys
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -33,11 +36,14 @@ from typing import Any, Optional
 import pandas as pd
 
 from src.context.flags import get_active_flags, load_context_flags
+from src.diagnostics.ask import active_diagnostic_flags
+from src.score.paths import scores_dir as _scores_dir_fn
 
 # ── constants ──────────────────────────────────────────────────────────────────
 
 # Spec §5 — state score bands (lo, hi).  Higher = more training-ready.
 _STATE_BANDS: dict[str, tuple[int, int]] = {
+    "insufficient_data":          (0, 0),
     "illness-risk":               (10, 29),
     "deload":                     (50, 69),
     "accumulating-fatigue":       (30, 49),
@@ -63,10 +69,27 @@ _DIVERGENCE_MODS: dict[str, float] = {
 }
 
 _RECENT_ILLNESS_WINDOW_DAYS = 14   # "cleared" detection window
-_SCORES_DIR = Path(__file__).resolve().parents[2] / "data" / "scores"
+
+
+def _scores_dir() -> Path:
+    return _scores_dir_fn()
+
+
+_ADO_TIER_TO_COMPOSITE: dict[str, str] = {
+    "fraying": "high",
+    "drift": "moderate",
+    "adapted": "good",
+    "high": "high",
+    "moderate": "moderate",
+    "good": "good",
+    "unknown": "unknown",
+}
 
 # Default confidence for unknown/missing lens inputs
 _UNKNOWN_CONF = 0.5
+
+# When all three flagship lenses are unknown/refused — fixed floor (composite-spec §1)
+_INSUFFICIENT_DATA_CONF = 0.3
 
 
 # ── typed input containers ────────────────────────────────────────────────────
@@ -85,6 +108,7 @@ class NlrHrvInput:
     nlr_term: float    = 1.0         # NLR / 3.0 — from meta dict
     hrv_term:  float   = 1.0         # baseline / current — from meta dict
     quality_flags: list[str] = field(default_factory=list)
+    cbc_age_days: Optional[int] = None  # from meta when NLR scorer supplies it
 
     @classmethod
     def from_score_day(cls, result: dict) -> "NlrHrvInput":
@@ -97,6 +121,7 @@ class NlrHrvInput:
             nlr_term      = meta.get("nlr_term", 1.0),
             hrv_term      = meta.get("hrv_term", 1.0),
             quality_flags = result.get("quality_flags", []),
+            cbc_age_days  = meta.get("cbc_age_days"),
         )
 
     @property
@@ -150,7 +175,7 @@ class CompositeResult:
     """
     composite-spec §3 output schema.
     """
-    state:            str           # one of 7 states
+    state:            str           # one of 8 states (incl. insufficient_data)
     score:            int           # 0–100, normalized within state band
     primary_signal:   str           # nlr_hrv | sri | ef | convergent | context
     divergence_flags: list[str]     # patterns from skill §4
@@ -167,6 +192,7 @@ def score_day(
     c3: Optional[EfInput]  = None,
     context_flags: Optional[dict[str, bool]] = None,
     *,
+    diagnostic_flags: Optional[dict[str, Any]] = None,
     recent_illness: Optional[bool] = None,
     context_flags_path: Optional[Path] = None,
 ) -> CompositeResult:
@@ -194,10 +220,41 @@ def score_day(
     # ── context ────────────────────────────────────────────────────────────────
     if context_flags is None:
         context_flags = get_active_flags(scoring_date, path=context_flags_path)
-    illness_flag = bool(context_flags.get("illness", False))
+
+    # Merge diagnostic answers (diagnostics override YAML for shared keys)
+    _diag = diagnostic_flags or {}
+    illness_from_diagnostic = (
+        bool(_diag.get("illness", False))
+        and not bool(context_flags.get("illness", False))
+    )
+    merged_context = {**context_flags, **_diag}
+    illness_flag = bool(merged_context.get("illness", False))
 
     if recent_illness is None:
         recent_illness = _detect_recent_illness(scoring_date, context_flags_path)
+
+    # ── all flagship lenses unknown/refused — before §4.1 cascade ─────────────
+    if _all_flagship_lenses_unknown(c1, c2, c3):
+        n_unknown = _count_unknown_flagship_lenses(c1, c2, c3)
+        stale_cbc_fragment = (
+            f"({c1.cbc_age_days}d)"
+            if c1.cbc_age_days is not None
+            else "(unknown)"
+        )
+        reasoning = (
+            "Insufficient data to compute composite. "
+            f"{n_unknown} of 3 flagship lenses returned unknown. "
+            "Most common cause: stale CBC "
+            f"{stale_cbc_fragment} or insufficient HRV baseline window."
+        )
+        return CompositeResult(
+            state            = "insufficient_data",
+            score            = 0,
+            primary_signal   = "convergent",
+            divergence_flags = [],
+            reasoning        = reasoning,
+            confidence       = _INSUFFICIENT_DATA_CONF,
+        )
 
     # ── populate C3.hrv_direction from C1 if caller left it at default ─────────
     if c3.hrv_direction == "unknown" and c1.tier != "unknown":
@@ -218,7 +275,8 @@ def score_day(
     # ── reasoning ─────────────────────────────────────────────────────────────
     reasoning = _build_reasoning(
         state, score, primary_signal, c1, c2, c3,
-        divergence_flags, illness_flag, recent_illness, confidence
+        divergence_flags, illness_flag, recent_illness, confidence,
+        illness_from_diagnostic=illness_from_diagnostic,
     )
 
     return CompositeResult(
@@ -264,7 +322,9 @@ def score_range(
         c3 = c3_results.get(current) or EfInput()
 
         ctx = get_active_flags(current, path=context_flags_path)
+        diag = active_diagnostic_flags(current)
         r = score_day(current, c1, c2, c3, context_flags=ctx,
+                      diagnostic_flags=diag,
                       context_flags_path=context_flags_path)
 
         rows.append({
@@ -279,10 +339,196 @@ def score_range(
         current += timedelta(days=1)
 
     out_df = pd.DataFrame(rows)
-    out_path = output_path or (_SCORES_DIR / "composite.parquet")
+    out_path = output_path or (_scores_dir() / "composite.parquet")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_parquet(out_path, index=False)
     return out_df
+
+
+def _nlr_row_to_score_day(row: pd.Series) -> dict[str, Any]:
+    meta: dict[str, Any] = {}
+    mj = row.get("meta_json")
+    if mj is not None and pd.notna(mj):
+        meta = json.loads(str(mj))
+    qfj = row.get("quality_flags_json")
+    qf: list[str] = []
+    if qfj is not None and pd.notna(qfj):
+        qf = list(json.loads(str(qfj)))
+    return {
+        "tier": row["tier"],
+        "score": row["score"],
+        "confidence": row["confidence"],
+        "reasoning": row["reasoning"],
+        "meta": meta,
+        "quality_flags": qf,
+    }
+
+
+def _sri_row_to_input(row: pd.Series) -> SriInput:
+    tier = str(row.get("tier") or "").lower()
+    band = tier if tier in ("irregular", "moderate", "high") else "unknown"
+    sv = pd.to_numeric(row.get("score"), errors="coerce")
+    return SriInput(
+        regularity_band=band,
+        sri=float(sv) if sv == sv else None,
+        confidence=float(row.get("confidence") or _UNKNOWN_CONF),
+    )
+
+
+def _ado_row_to_input(row: pd.Series) -> EfInput:
+    cb_raw = row.get("composite_band")
+    tier = str(row.get("tier") or "").lower()
+    if cb_raw is not None and pd.notna(cb_raw):
+        band = str(cb_raw).lower()
+    else:
+        band = _ADO_TIER_TO_COMPOSITE.get(tier, "unknown")
+    z = pd.to_numeric(row.get("zscore"), errors="coerce")
+    return EfInput(
+        decoupling_band=band if band in ("high", "moderate", "good", "unknown") else "unknown",
+        ef_zscore=float(z) if z == z else None,
+        confidence=float(row.get("confidence") or _UNKNOWN_CONF),
+    )
+
+
+def score_range_from_parquets(
+    start_date: date,
+    end_date: date,
+    *,
+    nlr_path: Path,
+    sri_path: Path,
+    ado_path: Path,
+    context_flags_path: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+) -> pd.DataFrame:
+    """
+    Build composite parquet by joining flagship scorer outputs on disk.
+
+    Expects ``nlr_hrv.parquet`` rows to include ``meta_json`` + ``quality_flags_json``
+    (written by ``nlr_hrv_readiness.score_range``) so :class:`NlrHrvInput` matches
+    the in-memory scorer path.
+    """
+    nlr = pd.read_parquet(nlr_path)
+    sp = pd.read_parquet(sri_path)
+    ad = pd.read_parquet(ado_path)
+
+    nlr["date"] = pd.to_datetime(nlr["date"]).dt.date
+    sp["date"] = pd.to_datetime(sp["date"]).dt.date
+    ad["date"] = pd.to_datetime(ad["date"]).dt.date
+
+    c1_results: dict[date, dict[str, Any]] = {}
+    for _, row in nlr.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c1_results[d] = _nlr_row_to_score_day(row)
+
+    c2_results: dict[date, SriInput] = {}
+    for _, row in sp.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c2_results[d] = _sri_row_to_input(row)
+
+    c3_results: dict[date, EfInput] = {}
+    for _, row in ad.iterrows():
+        d = row["date"]
+        if start_date <= d <= end_date:
+            c3_results[d] = _ado_row_to_input(row)
+
+    return score_range(
+        start_date,
+        end_date,
+        c1_results,
+        c2_results=c2_results,
+        c3_results=c3_results,
+        context_flags_path=context_flags_path,
+        output_path=output_path,
+    )
+
+
+def _composite_cli() -> None:
+    ap = argparse.ArgumentParser(description="Composite parquet from flagship parquets.")
+    ap.add_argument("--since", required=True)
+    ap.add_argument("--until", default=None, help="Inclusive end date (default: max date in nlr parquet).")
+    ap.add_argument("--scores-dir", type=Path, default=None, help="Directory with *.parquet (default HEALTHOS_SCORES_DIR or data/scores).")
+    ap.add_argument("--context-flags", default=None)
+    args = ap.parse_args()
+
+    sd = Path(args.scores_dir).resolve() if args.scores_dir else _scores_dir()
+
+    nlr_p = sd / "nlr_hrv.parquet"
+    sri_p = sd / "sri.parquet"
+    ado_p = sd / "aerobic_decoupling.parquet"
+
+    nlr = pd.read_parquet(nlr_p)
+    start_d = date.fromisoformat(args.since)
+    if args.until:
+        end_d = date.fromisoformat(args.until)
+    else:
+        end_d = pd.to_datetime(nlr["date"]).dt.date.max()
+
+    ctx: Optional[Path] = None
+    if args.context_flags:
+        ctx = Path(args.context_flags)
+    else:
+        for key in ("HEALTHOS_CONTEXT_FLAGS", "CONTEXT_FLAGS"):
+            env = os.environ.get(key)
+            if env:
+                ctx = Path(env)
+                break
+
+    score_range_from_parquets(
+        start_d,
+        end_d,
+        nlr_path=nlr_p,
+        sri_path=sri_p,
+        ado_path=ado_p,
+        context_flags_path=ctx,
+    )
+    print(f"Wrote {sd / 'composite.parquet'}", file=sys.stderr)
+
+
+# ── flagship lens coverage (insufficient_data gate, before §4.1) ─────────────
+
+
+def _flagship_lens_unknown_or_refused_c1(c1: NlrHrvInput) -> bool:
+    """C1 reports no usable NLR×HRV classification."""
+    return c1.tier == "unknown"
+
+
+def _flagship_lens_unknown_or_refused_c2(c2: SriInput) -> bool:
+    """C2 (SRI) not yet classifiable."""
+    return c2.regularity_band == "unknown"
+
+
+def _flagship_lens_unknown_or_refused_c3(c3: EfInput) -> bool:
+    """C3 (aerobic decoupling) not yet classifiable."""
+    return c3.decoupling_band == "unknown"
+
+
+def _all_flagship_lenses_unknown(
+    c1: NlrHrvInput,
+    c2: SriInput,
+    c3: EfInput,
+) -> bool:
+    return (
+        _flagship_lens_unknown_or_refused_c1(c1)
+        and _flagship_lens_unknown_or_refused_c2(c2)
+        and _flagship_lens_unknown_or_refused_c3(c3)
+    )
+
+
+def _count_unknown_flagship_lenses(
+    c1: NlrHrvInput,
+    c2: SriInput,
+    c3: EfInput,
+) -> int:
+    n = 0
+    if _flagship_lens_unknown_or_refused_c1(c1):
+        n += 1
+    if _flagship_lens_unknown_or_refused_c2(c2):
+        n += 1
+    if _flagship_lens_unknown_or_refused_c3(c3):
+        n += 1
+    return n
 
 
 # ── state classification ───────────────────────────────────────────────────────
@@ -506,6 +752,8 @@ def _score_in_band(
     spec §5: score = hi − round(severity × (hi − lo)).
     severity 0 → score hi (best within band); severity 1 → score lo (worst).
     """
+    if state == "insufficient_data":
+        return 0
     lo, hi = _STATE_BANDS.get(state, (40, 60))
     severity = _compute_severity(state, c1, c2, c3)
     return max(lo, min(hi, round(hi - severity * (hi - lo))))
@@ -540,6 +788,7 @@ def _geomean(values: list[float]) -> float:
 
 # Action implications per state (spec §4 table)
 _STATE_ACTIONS: dict[str, str] = {
+    "insufficient_data":          "Do not interpret readiness numerically; restore CBC recency and wearable/HRV coverage.",
     "illness-risk":               "Stop training; investigate illness onset.",
     "deload":                     "Cap volume; no high-intensity sessions.",
     "accumulating-fatigue":       "Reduce load; monitor for 3–5 days before reassessing.",
@@ -576,6 +825,8 @@ def _build_reasoning(
     illness_flag: bool,
     recent_illness: bool,
     confidence: float,
+    *,
+    illness_from_diagnostic: bool = False,
 ) -> str:
     """
     composite-spec §8: deterministic reasoning template.
@@ -588,7 +839,12 @@ def _build_reasoning(
 
     # 2. Primary driver
     if primary_signal == "context":
-        ctx_reason = "illness window active" if illness_flag else "recent illness window"
+        if illness_from_diagnostic:
+            ctx_reason = "illness confirmed via diagnostic answer"
+        elif illness_flag:
+            ctx_reason = "illness window active"
+        else:
+            ctx_reason = "recent illness window"
         parts.append(f"Primary signal: context ({ctx_reason}).")
     elif primary_signal == "nlr_hrv":
         if c1.score is not None:
@@ -693,3 +949,7 @@ def _fill_hrv_direction(c3: EfInput, c1: NlrHrvInput) -> EfInput:
         confidence             = c3.confidence,
         quality_flags          = list(c3.quality_flags),
     )
+
+
+if __name__ == "__main__":
+    _composite_cli()

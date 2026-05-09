@@ -1,0 +1,369 @@
+{
+  "state": "accumulating-fatigue",
+  "score": 38,
+  "todayDelta": {
+    "value": 0.0,
+    "unit": "pts",
+    "vs": "yesterday"
+  },
+  "subline": "NLR×HRV absent — Insufficient wake HRV history for baseline window. State: accumulating-fatigue (score 38/100). Insufficient HRV baseline: 0 valid day(s) (need 7). Spec §4.4: hrv_baseline_insufficient.",
+  "action": "Pull volume for 72h; favour sleep anchors before reassessing strain.",
+  "todayReasoning": "State: accumulating-fatigue (score 38/100). Primary signal: convergent (NLR×HRV=unknown, SRI=irregular, EF=unknown). Confidence: 0.1%. Action: Reduce load; monitor for 3–5 days before reassessing.",
+  "monthlyContext": {
+    "readiness": {
+      "score": 38.0,
+      "vsLastMonth": 6.9677,
+      "windowLabel": "Apr 2026 cohort",
+      "meaning": "This calendar month composites averaged `38.0/100`; MoM Δ `+6.97` vs prior calendar month.",
+      "reasoning": ""
+    },
+    "bioAge": {
+      "years": 24.3,
+      "chronologicalYears": 24.0,
+      "meaning": "Proxy `24.30y` vs chronological `24.00y` (Δ +0.30 y).",
+      "reasoning": "Additive transparent pulls enumerated in breakdown — see parquet contributors_json.",
+      "breakdown": [
+        {
+          "name": "Sleep regularity",
+          "pullYears": 0.3,
+          "weightPct": 100.0,
+          "detail": "SRI=77.0; anchor interpolation (80→0y, 70→+1y, 60→+2y, 50→+3y) gives +0.30y.",
+          "state": "rose"
+        },
+        {
+          "name": "HRV 30d trend",
+          "pullYears": -0.0,
+          "weightPct": 0.0,
+          "detail": "HRV trend z=+0.00; linear map +1σ→-0.5y, -1σ→+0.5y with ±2y cap gives -0.00y.",
+          "state": "rose"
+        },
+        {
+          "name": "Resting HR drift",
+          "pullYears": 0.0,
+          "weightPct": 0.0,
+          "detail": "RHR drift=+0.00 bpm; +5 bpm sustained for 30d→+0.5y (positive-only MVP rule) gives +0.00y.",
+          "state": "rose"
+        }
+      ]
+    }
+  },
+  "monthlyTrajectory": {
+    "month": "April 2026",
+    "days": [
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      },
+      {
+        "state": "accumulating-fatigue",
+        "score": 38
+      }
+    ],
+    "todayDayOfMonth": 30
+  },
+  "monthlyHistory": [
+    {
+      "month": "Apr 2026",
+      "score": 38
+    },
+    {
+      "month": "Mar 2026",
+      "score": 31
+    },
+    {
+      "month": "Feb 2026",
+      "score": 0
+    },
+    {
+      "month": "Jan 2026",
+      "score": 0
+    },
+    {
+      "month": "Dec 2025",
+      "score": 0
+    },
+    {
+      "month": "Nov 2025",
+      "score": 38.0
+    }
+  ],
+  "sevenDayState": [
+    "accumulating-fatigue",
+    "accumulating-fatigue",
+    "accumulating-fatigue",
+    "accumulating-fatigue",
+    "accumulating-fatigue",
+    "accumulating-fatigue",
+    "accumulating-fatigue"
+  ],
+  "secondaryReadouts": [],
+  "streams": [
+    {
+      "source": "amazfit",
+      "label": "AMAZFIT",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "strava",
+      "label": "STRAVA",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "jefit",
+      "label": "JEFIT",
+      "status": "missing",
+      "synced": "unknown"
+    },
+    {
+      "source": "whoop",
+      "label": "WHOOP",
+      "status": "missing",
+      "synced": "n/a"
+    },
+    {
+      "source": "bloodwork",
+      "label": "LABS",
+      "status": "fresh",
+      "synced": "0d"
+    }
+  ],
+  "flagship": {
+    "nlrHrv": {
+      "score": 0.0,
+      "tier": "unknown",
+      "sparkline": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dataAgeDays": 330,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Insufficient wake HRV history for baseline window.",
+      "displayScore": "—"
+    },
+    "sri": {
+      "score": 65,
+      "tier": "irregular",
+      "sparkline": [
+        0.0,
+        0.0,
+        64.371,
+        61.999,
+        58.483,
+        59.238,
+        60.12,
+        61.91,
+        60.306,
+        59.462,
+        64.456,
+        63.569,
+        64.864,
+        64.88
+      ],
+      "windowDays": 14,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "14d onset σ≈26.0 min (local)"
+    },
+    "decoupling": {
+      "zscore": 0.0,
+      "tier": "unknown",
+      "sparkline": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "windowDays": 30,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Aerobic decoupling z unavailable — need ≥3 paced runs in-window AND 8 historical paced days (have tail=4).",
+      "displayZscore": "—σ"
+    }
+  },
+  "divergence": {
+    "triggered": true,
+    "pattern": "",
+    "skillRef": "skills/health-reasoning.md §4 divergence matrix",
+    "reasoning": "State: accumulating-fatigue (score 38/100). Primary signal: convergent (NLR×HRV=unknown, SRI=irregular, EF=unknown). Confidence: 0.1%. Action: Reduce load; monitor for 3–5 days before reassessing.",
+    "drivers": [
+      {
+        "signal": "NLR×HRV",
+        "value": "— unavailable",
+        "note": "Insufficient wake HRV history for baseline window.",
+        "state": "amber"
+      },
+      {
+        "signal": "Illness window",
+        "value": "Synthetic viral GI overlap — demo context only.",
+        "note": "2026-03-25 – 2026-04-05",
+        "state": "green"
+      }
+    ]
+  },
+  "interventions": [
+    {
+      "action": "Zero optional sessions for 48h",
+      "effort": 4,
+      "impact": "HIGH",
+      "category": "training",
+      "why": "Composite 38.0 below 55 — prioritize recovery primitives.",
+      "skillRef": "composite-spec §3",
+      "shortcut": "⌘1"
+    },
+    {
+      "action": "Anchor sleep onset before {target_time}",
+      "effort": 3,
+      "impact": "HIGH",
+      "category": "sleep",
+      "why": "SRI 64.88 below the 70 threshold. Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.",
+      "skillRef": "§2.2",
+      "shortcut": "⌘2"
+    }
+  ]
+}

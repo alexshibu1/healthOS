@@ -213,6 +213,27 @@ class TestStateClassification:
         lo, hi = _STATE_BANDS["recovered"]
         assert lo <= result.score <= hi
 
+    def test_insufficient_data_all_three_lenses_unknown(self):
+        """
+        Rule 0: C1.tier, C2.regularity_band, C3.decoupling_band all unknown
+        → insufficient_data, score 0, confidence 0.3 (before §4.1 cascade).
+        """
+        c1 = NlrHrvInput(
+            tier="unknown", score=None, confidence=0.0,
+            nlr_term=1.0, hrv_term=1.0,
+        )
+        c2 = SriInput(regularity_band="unknown", confidence=0.5)
+        c3 = EfInput(decoupling_band="unknown", confidence=0.5)
+        result = score_day(
+            date(2026, 4, 24), c1, c2=c2, c3=c3,
+            context_flags=_NO_ILLNESS, recent_illness=False,
+        )
+        assert result.state == "insufficient_data"
+        assert result.score == 0
+        assert result.confidence == 0.3
+        assert result.divergence_flags == []
+        assert "3 of 3 flagship lenses returned unknown" in result.reasoning
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # §2  Five real-day scenarios

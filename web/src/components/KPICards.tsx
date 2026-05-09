@@ -13,7 +13,12 @@ import type {
 interface KPICardsProps {
   /* — Today (the secondary widget in this monthly report) — */
   state: SnapshotState;
+  /** Composite refused — mute month/today headline numerics; subline carries coverage story. */
+  headlineInsufficient?: boolean;
   todayScore: number;
+  /** Em dash headline when composite refused (e.g. insufficient_data). */
+
+  todayScoreDisplay?: string;
   todayDelta: Delta;
   subline: string;
   action: string;
@@ -42,7 +47,9 @@ interface KPICardsProps {
 
 export function KPICards({
   state,
+  headlineInsufficient = false,
   todayScore,
+  todayScoreDisplay,
   todayDelta,
   subline,
   action,
@@ -68,6 +75,7 @@ export function KPICards({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
         <article className="relative lg:col-span-7">
           <MonthHero
+            suppressCompositeVisualization={headlineInsufficient}
             color={monthColor}
             month={monthlyTrajectory.month}
             score={monthlyContext.readiness.score}
@@ -86,8 +94,10 @@ export function KPICards({
 
         <article className="relative lg:col-span-5">
           <TodayCard
+            headlineInsufficient={headlineInsufficient}
             stateTitle={stateTitle}
             todayScore={todayScore}
+            todayScoreDisplay={todayScoreDisplay}
             todayDelta={todayDelta}
             subline={subline}
             action={action}
@@ -112,6 +122,7 @@ function titleCase(label: string): string {
  * ---------------------------------------------------------------- */
 
 interface MonthHeroProps {
+  suppressCompositeVisualization?: boolean;
   color: StateColor;
   month: string;
   score: number;
@@ -124,6 +135,7 @@ interface MonthHeroProps {
 }
 
 function MonthHero({
+  suppressCompositeVisualization = false,
   color,
   month,
   score,
@@ -138,14 +150,14 @@ function MonthHero({
   const expanderId = useId();
   const tokens = COLOR_TOKENS[color];
 
-  const tierLabel =
-    score >= 75 ? "GREEN" : score >= 60 ? "CAUTION" : "DELOAD";
-
-  const deltaArrow = delta.value > 0 ? "↗" : delta.value < 0 ? "↘" : "→";
-  const deltaSign = delta.value > 0 ? "+" : "";
-
   return (
-    <div className="group relative h-full overflow-hidden rounded-md border border-paper-divider bg-paper p-8 shadow-card transition-shadow hover:shadow-card-hover">
+    <div
+      className={`group relative h-full overflow-hidden rounded-md bg-paper p-8 shadow-card transition-shadow hover:shadow-card-hover ${
+        suppressCompositeVisualization
+          ? "border border-ink-muted/25"
+          : "border border-paper-divider"
+      }`}
+    >
       {/* Card label — month name + window + ⓘ */}
       <div className="flex items-baseline justify-between border-b border-paper-divider pb-3">
         <div className="flex items-baseline gap-3">
@@ -172,75 +184,100 @@ function MonthHero({
         </button>
       </div>
 
-      {/* Headline: month name (serif), score, peer sparkline, delta, tier */}
+      {/* Headline: month name (serif); numerics/visualizations drop when composite is refused. */}
       <div className="mt-7">
-        <h1 className="display text-chapter font-light leading-[1.05] text-ink">
+        <h1
+          className={
+            suppressCompositeVisualization
+              ? "display text-chapter font-light leading-[1.05] text-ink-muted"
+              : "display text-chapter font-light leading-[1.05] text-ink"
+          }
+        >
           {month}
         </h1>
-        {/* Score row + wider 6-mo trajectory (readable at a glance vs squinting
-            at a 64px micro-sparkline). Threshold guides anchor the amber band. */}
-        <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
-          <div className="flex shrink-0 items-end gap-5">
-            <span className="display tabular text-hero font-light leading-none text-ink">
-              {score}
-            </span>
-            <span className="display text-2xl font-light leading-none text-ink-subtle">
-              / 100
-            </span>
-          </div>
-          <div className="min-w-0 flex-1 lg:max-w-md xl:max-w-lg">
-            <span className="mb-2 block font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-ink-subtle">
-              Six-month composite
-            </span>
-            <MonthlyHistorySparkline
-              data={history}
-              accentColor={tokens.spark}
-            />
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className={`h-1.5 w-1.5 rounded-full ${tokens.dot}`}
-            />
-            <span
-              className={`font-mono text-[10px] font-medium uppercase tracking-[0.18em] ${tokens.ink}`}
-            >
-              {tierLabel} BAND
-            </span>
-          </span>
-          <span
-            className={`font-mono tabular text-[11px] ${
-              delta.value > 0
-                ? "text-state-green-ink"
-                : delta.value < 0
-                  ? "text-state-red-ink"
-                  : "text-ink-faint"
-            }`}
-          >
-            {deltaArrow} {deltaSign}
-            {delta.value} {delta.unit} vs {delta.vs}
-          </span>
-        </div>
-        <p className="display mt-5 max-w-lg text-base font-light leading-relaxed text-ink-muted">
-          {meaning}
-        </p>
+        {suppressCompositeVisualization ? (
+          <p className="display mt-5 max-w-lg text-[15px] font-light leading-relaxed text-ink-muted">
+            Monthly headline score, six‑month trajectory, MoM delta, and daily strip
+            are hidden while the scorer marks the composite as{" "}
+            <span className="font-normal">insufficient_data</span> — they would
+            imply precision the inputs do not yet support.
+          </p>
+        ) : (
+          <>
+            {/* Score row + wider 6-mo trajectory. Threshold guides anchor the amber band. */}
+            <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
+              <div className="flex shrink-0 items-end gap-5">
+                <span className="display tabular text-hero font-light leading-none text-ink">
+                  {score}
+                </span>
+                <span className="display text-2xl font-light leading-none text-ink-subtle">
+                  / 100
+                </span>
+              </div>
+              <div className="min-w-0 flex-1 lg:max-w-md xl:max-w-lg">
+                <span className="mb-2 block font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-ink-subtle">
+                  Six-month composite
+                </span>
+                <MonthlyHistorySparkline
+                  data={history}
+                  accentColor={tokens.spark}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-4">
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className={`h-1.5 w-1.5 rounded-full ${tokens.dot}`}
+                />
+                <span
+                  className={`font-mono text-[10px] font-medium uppercase tracking-[0.18em] ${tokens.ink}`}
+                >
+                  {score >= 75 ? "GREEN" : score >= 60 ? "CAUTION" : "DELOAD"}{" "}
+                  BAND
+                </span>
+              </span>
+              <span
+                className={`font-mono tabular text-[11px] ${
+                  delta.value > 0
+                    ? "text-state-green-ink"
+                    : delta.value < 0
+                      ? "text-state-red-ink"
+                      : "text-ink-faint"
+                }`}
+              >
+                {delta.value > 0 ? "↗" : delta.value < 0 ? "↘" : "→"}{" "}
+                {delta.value > 0 ? "+" : ""}
+                {delta.value} {delta.unit} vs {delta.vs}
+              </span>
+            </div>
+            <p className="display mt-5 max-w-lg text-base font-light leading-relaxed text-ink-muted">
+              {meaning}
+            </p>
+          </>
+        )}
       </div>
 
-      {/* 30-day month strip — the headline visualization. One cell per day,
-          colored by that day's state. Today is the rightmost cell. */}
+      {/* 30-day month strip — withheld when headline composite scores are refused. */}
       <div className="mt-7 border-t border-paper-divider pt-5">
-        <div className="mb-2.5 flex items-baseline justify-between">
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-ink-subtle">
-            Daily trajectory
-          </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-            day 1 → today
-          </span>
-        </div>
-        <MonthStrip trajectory={trajectory} />
-        <MonthStripLegend trajectory={trajectory} />
+        {suppressCompositeVisualization ? (
+          <p className="font-mono text-[11px] font-normal uppercase leading-relaxed tracking-[0.12em] text-ink-muted">
+            Daily trajectory not shown · same completeness rule as headline composite
+          </p>
+        ) : (
+          <>
+            <div className="mb-2.5 flex items-baseline justify-between">
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-ink-subtle">
+                Daily trajectory
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+                day 1 → today
+              </span>
+            </div>
+            <MonthStrip trajectory={trajectory} />
+            <MonthStripLegend trajectory={trajectory} />
+          </>
+        )}
       </div>
 
       <AnimatePresence initial={false}>
@@ -508,6 +545,8 @@ function MonthStripLegend({ trajectory }: { trajectory: MonthlyTrajectory }) {
     return acc;
   }, {});
   const order: SnapshotState[] = [
+    "insufficient_data",
+    "accumulating-fatigue",
     "cleared",
     "recovered",
     "autonomic-recovery-leading",
@@ -542,8 +581,14 @@ function MonthStripLegend({ trajectory }: { trajectory: MonthlyTrajectory }) {
  * ---------------------------------------------------------------- */
 
 interface TodayCardProps {
+  headlineInsufficient?: boolean;
   stateTitle: string;
   todayScore: number;
+
+  /** When composite cannot emit numeric headline (insufficient inputs). */
+
+
+  todayScoreDisplay?: string;
   todayDelta: Delta;
   subline: string;
   action: string;
@@ -551,8 +596,10 @@ interface TodayCardProps {
 }
 
 function TodayCard({
+  headlineInsufficient = false,
   stateTitle,
   todayScore,
+  todayScoreDisplay,
   todayDelta,
   subline,
   action,
@@ -561,12 +608,16 @@ function TodayCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const expanderId = useId();
 
-  const deltaArrow =
-    todayDelta.value > 0 ? "↗" : todayDelta.value < 0 ? "↘" : "→";
-  const deltaSign = todayDelta.value > 0 ? "+" : "";
+  const hideDelta = headlineInsufficient || Boolean(todayScoreDisplay);
+
+  const cardBorder = headlineInsufficient
+    ? "border border-ink-muted/25 shadow-card"
+    : "border border-paper-divider shadow-card";
 
   return (
-    <div className="group relative h-full overflow-hidden rounded-md border border-paper-divider bg-paper p-7 shadow-card transition-shadow hover:shadow-card-hover">
+    <div
+      className={`group relative h-full overflow-hidden rounded-md bg-paper p-7 transition-shadow hover:shadow-card-hover ${cardBorder}`}
+    >
       <div className="flex items-baseline justify-between border-b border-paper-divider pb-3">
         <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-ink-subtle">
           Today
@@ -587,37 +638,67 @@ function TodayCard({
         </button>
       </div>
 
-      {/* Score row — smaller than the Month hero, this is a sidebar */}
-      <div className="mt-6 flex items-baseline gap-3">
-        <span className="display tabular text-card font-light leading-none text-ink">
-          {todayScore}
-        </span>
-        <span className="display text-base font-light text-ink-subtle">
-          / 100
-        </span>
-        <span
-          className={`ml-auto font-mono tabular text-[10px] ${
-            todayDelta.value > 0
-              ? "text-state-green-ink"
-              : todayDelta.value < 0
-                ? "text-state-red-ink"
-                : "text-ink-faint"
-          }`}
-        >
-          {deltaArrow} {deltaSign}
-          {todayDelta.value} {todayDelta.unit}
-        </span>
-      </div>
+      {headlineInsufficient ? (
+        <>
+          <p className="display mt-6 text-base font-light leading-relaxed text-ink">
+            {subline}
+          </p>
+          <h2 className="display mt-5 text-xl font-light leading-snug tracking-tight text-ink-muted">
+            {stateTitle}
+          </h2>
+          <div className="mt-6 flex items-baseline gap-3 border-t border-dashed border-ink-muted/20 pt-5">
+            <span className="display tabular text-card font-light leading-none text-ink-muted">
+              {todayScoreDisplay ?? todayScore}
+            </span>
+            {!todayScoreDisplay ? (
+              <span className="display text-base font-light text-ink-subtle">
+                / 100
+              </span>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Score row — smaller than the Month hero, this is a sidebar */}
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="display tabular text-card font-light leading-none text-ink">
+              {todayScoreDisplay ?? todayScore}
+            </span>
+            {!todayScoreDisplay ? (
+              <span className="display text-base font-light text-ink-subtle">
+                / 100
+              </span>
+            ) : null}
+            {!hideDelta ? (
+              <span
+                className={`ml-auto font-mono tabular text-[10px] ${
+                  todayDelta.value > 0
+                    ? "text-state-green-ink"
+                    : todayDelta.value < 0
+                      ? "text-state-red-ink"
+                      : "text-ink-faint"
+                }`}
+              >
+                {todayDelta.value > 0
+                  ? "↗"
+                  : todayDelta.value < 0
+                    ? "↘"
+                    : "→"}{" "}
+                {todayDelta.value > 0 ? "+" : ""}
+                {todayDelta.value} {todayDelta.unit}
+              </span>
+            ) : null}
+          </div>
 
-      {/* State title + ONE short sentence. The fuller subline + action +
-          reasoning live in the ⓘ expander — preserves the layered-
-          disclosure pattern that the secondary widget had broken. */}
-      <h2 className="display mt-5 text-2xl font-light leading-tight text-ink">
-        {stateTitle}
-      </h2>
-      <p className="display mt-3 text-base font-light leading-relaxed text-ink">
-        {subline}
-      </p>
+          {/* State title + glance line; reasoning in expander */}
+          <h2 className="display mt-5 text-2xl font-light leading-tight text-ink">
+            {stateTitle}
+          </h2>
+          <p className="display mt-3 text-base font-light leading-relaxed text-ink">
+            {subline}
+          </p>
+        </>
+      )}
 
       <AnimatePresence initial={false}>
         {isExpanded && (

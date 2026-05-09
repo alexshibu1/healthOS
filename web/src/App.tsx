@@ -7,8 +7,8 @@ import { DivergenceStrip } from "./components/DivergenceStrip";
 import { Interventions } from "./components/Interventions";
 import { SectionDivider } from "./components/SectionDivider";
 import { Disclaimer } from "./components/Disclaimer";
+import { loadSnapshot } from "./data/loadSnapshot";
 import { STATE_TO_COLOR } from "./lib/stateColors";
-import { mockSnapshot } from "./mockData";
 
 /* ---------------------------------------------------------------- *
  * App — page composition                                            *
@@ -31,7 +31,7 @@ import { mockSnapshot } from "./mockData";
  * ---------------------------------------------------------------- */
 
 function App() {
-  const data = mockSnapshot;
+  const data = loadSnapshot();
   const accentColor = STATE_TO_COLOR[data.state];
 
   // Numerals shift if the optional Divergence chapter is hidden.
@@ -50,7 +50,9 @@ function App() {
         />
         <KPICards
           state={data.state}
+          headlineInsufficient={data.state === "insufficient_data"}
           todayScore={data.score}
+          todayScoreDisplay={data.todayScoreDisplay}
           todayDelta={data.todayDelta}
           subline={data.subline}
           action={data.action}

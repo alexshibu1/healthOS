@@ -1,0 +1,31 @@
+date,sleep_start_local,sleep_end_local,sleep_duration_h,sri_score,wake_hrv_ms,wake_rhr_bpm,strava_cardio_strain,jefit_volume_kg,subjective_energy_1_10,neutrophils_pct,lymphocytes_pct,nlr,readiness_score,bio_age_proxy_years,top_intervention_hint
+2026-04-01,01:22,07:05,5.72,58,39,66,0,0,4,58.0,29.0,2.00,44,25.1,Social night + short sleep—no training debt today
+2026-04-02,23:51,06:40,6.82,67,44,61,41,7800,5,58.0,29.0,2.00,52,24.7,Earlier bed even if work unfinished
+2026-04-03,23:18,06:33,7.25,74,51,57,55,9200,7,58.0,29.0,2.00,63,24.2,Felt better than HRV—cap intensity anyway
+2026-04-04,00:03,07:12,7.15,69,46,60,0,10400,6,58.0,29.0,2.00,55,24.6,Heavy lift late; add easy walk not intervals
+2026-04-05,22:58,06:28,7.50,78,54,55,48,7100,8,58.0,29.0,2.00,71,23.9,Rare good Monday—don’t chase PRs
+2026-04-06,23:44,06:18,6.57,71,47,59,63,6400,6,58.0,29.0,2.00,58,24.5,Cardio strain up; sleep window slipped
+2026-04-07,23:09,06:52,7.72,81,56,54,35,5800,7,58.0,29.0,2.00,69,23.8,Stable block—keep volume boring
+2026-04-08,23:31,06:45,7.23,76,49,58,0,8900,5,58.0,29.0,2.00,54,24.4,Rest day metrics still meh—check stressors
+2026-04-09,00:41,06:55,6.23,63,42,62,58,0,5,58.0,29.0,2.00,48,24.9,Late screen time; protect tomorrow AM
+2026-04-10,23:27,07:03,7.60,79,53,56,44,10200,7,55.0,32.0,1.72,64,24.0,New lab draw—NLR improved vs last month
+2026-04-11,01:05,08:40,7.58,61,45,60,72,3200,6,55.0,32.0,1.72,56,24.5,Weekend oversleep ≠ recovery; fix Saturday bed
+2026-04-12,23:36,06:50,7.23,73,50,57,0,7600,7,55.0,32.0,1.72,60,24.1,Subjective up; autonomic still middling
+2026-04-13,22:47,06:35,7.80,84,57,54,52,6800,8,55.0,32.0,1.72,72,23.7,Good readiness—quality over volume
+2026-04-14,23:19,06:22,7.05,77,48,59,61,9400,6,55.0,32.0,1.72,59,24.3,Pushed run anyway—expect HRV tax
+2026-04-15,23:52,06:30,6.63,68,44,61,0,8100,5,55.0,32.0,1.72,51,24.8,Sleep debt stacking; skip optional session
+2026-04-16,00:18,06:40,6.37,64,41,63,88,0,4,55.0,32.0,1.72,43,25.0,Worst day this month—walk and sleep only
+2026-04-17,23:08,06:45,7.62,80,52,56,33,6200,7,55.0,32.0,1.72,65,24.0,Bounce not linear; hold moderate load
+2026-04-18,23:41,07:10,7.48,72,46,58,0,9800,6,52.0,35.0,1.49,57,24.3,Late Friday; gym made sleep sloppy
+2026-04-19,00:55,09:12,8.28,55,43,60,45,4100,5,52.0,35.0,1.49,49,24.7,Social jetlag—fix wake time not duration
+2026-04-20,23:04,06:28,7.40,82,55,55,49,7200,8,52.0,35.0,1.49,70,23.8,Back on schedule; don’t hero a workout
+2026-04-21,23:28,06:35,7.12,75,50,57,56,8500,7,52.0,35.0,1.49,62,24.2,Exam week adrenaline—trust RHR not vibes
+2026-04-22,01:12,06:45,5.55,59,38,65,74,0,4,52.0,35.0,1.49,41,25.2,Cram night—tomorrow is recovery priority
+2026-04-23,23:33,06:55,7.37,74,47,59,0,6900,6,52.0,35.0,1.49,55,24.5,Easy day after all-nighter hangover
+2026-04-24,22:51,06:40,7.82,86,58,53,42,5900,8,52.0,35.0,1.49,74,23.6,Best SRI week—repeat this sleep anchor
+2026-04-25,23:59,08:05,8.10,66,51,56,38,0,7,52.0,35.0,1.49,63,24.0,Slept in; good hours bad rhythm
+2026-04-26,23:14,06:42,7.47,79,54,55,66,9100,7,52.0,35.0,1.49,66,23.9,High strain OK if bedtime holds
+2026-04-27,23:07,06:38,7.52,81,56,54,0,7700,8,52.0,35.0,1.49,71,23.7,Active recovery—steps not spikes
+2026-04-28,00:28,06:50,6.37,62,43,61,81,8800,5,52.0,35.0,1.49,50,24.8,Chased Strava load on bad sleep—mistake
+2026-04-29,23:45,06:25,6.67,70,46,60,0,5200,6,52.0,35.0,1.49,56,24.4,Light lifting; fix Tuesday wind-down
+2026-04-30,23:21,06:44,7.38,77,52,57,47,7400,7,52.0,35.0,1.49,64,24.1,Month end uneven but trending OK

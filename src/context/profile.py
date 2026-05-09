@@ -30,6 +30,7 @@ Rejected loads raise ``ValueError`` with a message naming the problem.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
@@ -52,7 +53,9 @@ _REQUIRED_KEYS = (
 
 
 def _default_profile_path() -> Path:
-    # .../healthOS/src/context/profile.py → repo root is parents[2]
+    env = os.environ.get("HEALTHOS_PROFILE")
+    if env:
+        return Path(env).expanduser().resolve()
     return Path(__file__).resolve().parents[2] / "data" / "profile.yaml"
 
 

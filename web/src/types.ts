@@ -13,7 +13,9 @@ export type SnapshotState =
   | "deload"
   | "autonomic-recovery-leading"
   | "peripheral-strain"
-  | "illness-risk";
+  | "illness-risk"
+  | "accumulating-fatigue"
+  | "insufficient_data";
 
 export interface TierBadge {
   state: StateColor;
@@ -34,7 +36,9 @@ export interface Delta {
 
 export interface FlagshipNlrHrv {
   score: number;
-  tier: "green" | "caution" | "deload";
+  tier: "green" | "caution" | "deload" | "unknown";
+  /** When scorer refused (unknown tier), show em dash instead of numeric score ring. */
+  displayScore?: string;
   sparkline: number[];
   dataAgeDays: number;
   delta?: Delta;
@@ -48,7 +52,8 @@ export interface FlagshipNlrHrv {
 
 export interface FlagshipSri {
   score: number;
-  tier: "irregular" | "moderate" | "high";
+  tier: "irregular" | "moderate" | "high" | "unknown";
+  displayScore?: string;
   sparkline: number[];
   windowDays: number;
   delta?: Delta;
@@ -58,6 +63,8 @@ export interface FlagshipSri {
 export interface FlagshipDecoupling {
   zscore: number;
   tier: string;
+  /** When EF lens unknown — show dash instead of ±σ string. */
+  displayZscore?: string;
   sparkline: number[];
   windowDays: number;
   delta?: Delta;
@@ -263,6 +270,8 @@ export interface DataStream {
 export interface SnapshotData {
   state: SnapshotState;
   score: number;
+  /** When composite is insufficient_data — Today hero shows em dash, not numeric score. */
+  todayScoreDisplay?: string;
   /** Δ vs yesterday, on the composite score (0-100 scale). */
   todayDelta: Delta;
   subline: string;
