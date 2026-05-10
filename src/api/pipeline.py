@@ -22,7 +22,12 @@ def repo_root() -> Path:
 
 
 def ensure_rawdata_support_files(repo: Path) -> None:
-    """Copy demo fixtures next to universal.csv when the user has none yet."""
+    """Copy demo fixtures next to universal.csv when the user has none yet.
+
+    ``systemic_daily.csv`` is episodic lab context for bio-age / trends and is
+    independent of wearable rows in ``universal.csv``; replace with your own CSV
+    when you have panels—uploading universal alone does not rebuild labs.
+    """
     rd = repo / "rawdata"
     demo = repo / "data" / "examples" / "alex_demo"
     if not demo.is_dir():
