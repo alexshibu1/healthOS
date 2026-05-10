@@ -22,6 +22,13 @@ episodic  : list[Observation] — CBC draws, body weight, anything not time-seri
             NOT filtered by --since (scorer needs last-known anchor regardless
             of date range).
 
+Inputs
+------
+Loads ``rawdata/universal.csv`` when present (see ``src/ingest/universal_csv/spec.md``).
+Amazfit / Strava / JeFit are loaded only when their paths exist; at least one of
+``universal.csv``, ``amazfit helio/``, Strava export, JeFit export, or ``blood_panels/``
+must be present.
+
 Failures
 --------
 Loader exceptions propagate immediately (no silent swallowing).
@@ -54,6 +61,7 @@ from src.ingest.blood_panels.loader import (
     load as load_blood_panel,
     raise_if_blood_panel_frontmatter_rejected,
 )
+from src.ingest.universal_csv.loader import load as load_universal_csv
 
 
 # Metric kinds that are treated as episodic (not filtered by --since).
@@ -93,47 +101,70 @@ def load_all(
     all_obs:     list[Observation] = []
     all_rejects: list[dict]        = []
 
-    # ── Amazfit ───────────────────────────────────────────────────────────────
+    univ_path = root / "universal.csv"
     amazfit_root = root / "amazfit helio"
+    strava_csv = root / "strava" / "activities.csv"
+    jefit_matches = list(root.glob("bigApple*.csv"))
+    panel_dir = root / "blood_panels"
 
-    sleep_csv        = _require_one(amazfit_root / "SLEEP",          "SLEEP_*.csv")
-    sleep_minute_csv = _require_one(amazfit_root / "SLEEP_MINUTE",   "SLEEP_MINUTE_*.csv")
-    hr_csv           = _require_one(amazfit_root / "HEARTRATE_AUTO", "HEARTRATE_AUTO_*.csv")
-    body_csv         = _require_one(amazfit_root / "BODY",           "BODY_*.csv")
-    activity_csv     = _require_one(amazfit_root / "ACTIVITY",       "ACTIVITY_*.csv")
-    activity_min_csv = _require_one(amazfit_root / "ACTIVITY_MINUTE","ACTIVITY_MINUTE_*.csv")
-    activity_stg_csv = _require_one(amazfit_root / "ACTIVITY_STAGE", "ACTIVITY_STAGE_*.csv")
+    _bootstrap_sources(
+        root,
+        univ_path,
+        amazfit_root,
+        strava_csv,
+        jefit_matches,
+        panel_dir,
+    )
 
-    obs, rej = load_sleep(sleep_csv, sleep_minute_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "amazfit/sleep")
+    # ── universal.csv (optional wide ingest) ───────────────────────────────────
+    if univ_path.is_file():
+        obs, rej = load_universal_csv(univ_path, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "universal_csv")
 
-    # HRV proxy derived from per-minute sleep HR (3000/mean_sleep_HR formula).
-    # Unlocks NLR×HRV scorer when no RMSSD device is connected.
-    obs, rej = load_hrv_proxy(sleep_minute_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "amazfit/hrv_proxy")
+    # ── Amazfit ───────────────────────────────────────────────────────────────
+    if amazfit_root.is_dir():
+        sleep_csv        = _require_one(amazfit_root / "SLEEP",          "SLEEP_*.csv")
+        sleep_minute_csv = _require_one(amazfit_root / "SLEEP_MINUTE",   "SLEEP_MINUTE_*.csv")
+        hr_csv           = _require_one(amazfit_root / "HEARTRATE_AUTO", "HEARTRATE_AUTO_*.csv")
+        body_csv         = _require_one(amazfit_root / "BODY",           "BODY_*.csv")
+        activity_csv     = _require_one(amazfit_root / "ACTIVITY",       "ACTIVITY_*.csv")
+        activity_min_csv = _require_one(amazfit_root / "ACTIVITY_MINUTE","ACTIVITY_MINUTE_*.csv")
+        activity_stg_csv = _require_one(amazfit_root / "ACTIVITY_STAGE", "ACTIVITY_STAGE_*.csv")
 
-    obs, rej = load_hr(hr_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "amazfit/hr")
+        obs, rej = load_sleep(sleep_csv, sleep_minute_csv, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "amazfit/sleep")
 
-    obs, rej = load_body(body_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "amazfit/body")
+        # HRV proxy derived from per-minute sleep HR (3000/mean_sleep_HR formula).
+        obs, rej = load_hrv_proxy(sleep_minute_csv, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "amazfit/hrv_proxy")
 
-    obs, rej = load_activity(activity_csv, activity_min_csv, activity_stg_csv,
-                             rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "amazfit/activity")
+        obs, rej = load_hr(hr_csv, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "amazfit/hr")
+
+        obs, rej = load_body(body_csv, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "amazfit/body")
+
+        obs, rej = load_activity(activity_csv, activity_min_csv, activity_stg_csv,
+                                 rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "amazfit/activity")
 
     # ── Strava ────────────────────────────────────────────────────────────────
-    strava_csv = root / "strava" / "activities.csv"
-    obs, rej   = load_strava(strava_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "strava")
+    if strava_csv.is_file():
+        obs, rej = load_strava(strava_csv, rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "strava")
 
     # ── JeFit ─────────────────────────────────────────────────────────────────
-    jefit_csv = _require_one(root, "bigApple*.csv")
-    obs, rej  = load_jefit(jefit_csv, rawdata_root=root)
-    _collect(all_obs, all_rejects, obs, rej, "jefit")
+    if len(jefit_matches) == 1:
+        obs, rej = load_jefit(jefit_matches[0], rawdata_root=root)
+        _collect(all_obs, all_rejects, obs, rej, "jefit")
+    elif len(jefit_matches) > 1:
+        raise FileNotFoundError(
+            f"Multiple JeFit exports in {root}: {[p.name for p in jefit_matches]}. "
+            "Keep exactly one bigApple*.csv."
+        )
+
 
     # ── Blood panels (markdown under rawdata/blood_panels/*.md) ───────────────
-    panel_dir = root / "blood_panels"
     if panel_dir.is_dir():
         for md_path in sorted(panel_dir.glob("*.md")):
             bp_obs, bp_rej = load_blood_panel(md_path, rawdata_root=root)
@@ -174,6 +205,29 @@ def load_all(
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
+
+def _bootstrap_sources(
+    root: Path,
+    univ_path: Path,
+    amazfit_root: Path,
+    strava_csv: Path,
+    jefit_matches: list[Path],
+    panel_dir: Path,
+) -> None:
+    """Fail fast only when nothing under rawdata could produce observations."""
+    has_inputs = (
+        univ_path.is_file()
+        or amazfit_root.is_dir()
+        or strava_csv.is_file()
+        or len(jefit_matches) >= 1
+        or panel_dir.is_dir()
+    )
+    if not has_inputs:
+        raise FileNotFoundError(
+            f"No ingest inputs under {root}: add universal.csv, amazfit helio/, "
+            "strava/activities.csv, bigApple*.csv, and/or blood_panels/*.md."
+        )
+
 
 def _require_one(directory: Path, pattern: str) -> Path:
     """

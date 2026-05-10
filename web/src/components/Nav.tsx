@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
 import type { DataStream } from "../types";
 
 interface NavProps {
   date?: string;
   streams: DataStream[];
+  /** e.g. Upload — rendered upper-right before the dateline. */
+  trailingActions?: ReactNode;
 }
 
 const STATUS_DOT: Record<DataStream["status"], string> = {
@@ -12,7 +15,7 @@ const STATUS_DOT: Record<DataStream["status"], string> = {
   missing: "bg-ink-faint",
 };
 
-export function Nav({ date, streams }: NavProps) {
+export function Nav({ date, streams, trailingActions }: NavProps) {
   const today =
     date ??
     new Date().toLocaleDateString("en-US", {
@@ -32,10 +35,13 @@ export function Nav({ date, streams }: NavProps) {
           </span>
         </div>
 
-        {/* Date + dateline */}
-        <span className="font-mono tabular text-[11px] uppercase tracking-[0.18em] text-ink-muted">
-          {today}
-        </span>
+        <div className="flex items-baseline gap-5">
+          {trailingActions}
+          {/* Date + dateline */}
+          <span className="font-mono tabular text-[11px] uppercase tracking-[0.18em] text-ink-muted">
+            {today}
+          </span>
+        </div>
       </div>
 
       {/* Stream status ribbon — small dotted labels, no pills */}

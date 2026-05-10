@@ -8,10 +8,20 @@ SINCE := 2026-03-01
 UNTIL := 2026-04-30
 MONTH := 2026-04
 
-.PHONY: demo demo-pipeline demo-web demo-build demo-dataset
+.PHONY: demo demo-pipeline demo-web demo-build demo-dataset dev api-dev web-dev
 
 demo-dataset:
 	python scripts/build_alex_demo_dataset.py --end-date $(UNTIL) --days 60
+
+# Local app: FastAPI (8787) + Vite (5173). Press Ctrl+C to stop both when using -j2.
+dev:
+	$(MAKE) -j2 api-dev web-dev
+
+api-dev:
+	PYTHONPATH=$(ROOT) uvicorn src.api.app:app --host 127.0.0.1 --port 8787 --reload
+
+web-dev:
+	cd $(ROOT)/web && npm run dev
 
 demo-pipeline:
 	RAWDATA_ROOT=$(DEMO) CONTEXT_FLAGS=$(DEMO)/context_flags.yaml HEALTHOS_PROFILE=$(DEMO)/profile.yaml \

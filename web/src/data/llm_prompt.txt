@@ -1,0 +1,124 @@
+## Health Intelligence Report — Recommendation Request
+
+Paste this entire message into your assistant as **user context**. The sections below
+are intentionally redundant where helpful — prefer the labeled "Today's reading"
+block when interpreting headline severity.
+
+---
+
+## Your role
+
+You are a sports physician and decision-theory analyst reviewing a personal health
+intelligence report exported from the user's healthOS dashboard.
+
+Task:
+  • Recommend exactly **three** interventions for the **next 14 days**.
+  • Rank them by **impact per unit of effort** (not raw difficulty alone).
+  • Tie each recommendation to **one or more** of the three flagship lenses
+    (NLR×HRV, SRI, aerobic decoupling) using **specific numbers from this prompt**.
+  • Be concrete enough that the user could start tomorrow morning without guessing.
+
+## The user
+
+Age 24, sex male. Training modality: running. Primary goal: longevity.
+
+## Today's reading (2026-04-30)
+
+Snapshot date:           2026-04-30
+Composite state label:    autonomic-recovery-leading
+Composite score (0–100): 68   (interpret alongside label — may be withheld)
+Model confidence:        unavailable
+
+Scorer rationale (verbatim):
+State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload,
+readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated:
+autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded
+and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization
+has high expected leverage. Confidence: 39.2% (divergence modifiers:
+autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload;
+wearable leads blood — wait for NLR confirmation.
+
+
+Dashboard card subline: State: autonomic-recovery-leading (score 68/100). Score 1.64 = (5.37/3.0) × (45.8/49.9).
+Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging
+multiplier 0.85).
+
+Dashboard suggested stance: Hold reload ramps while labs catch up — autonomic rebound already visible.
+
+## Three flagship lenses
+
+Interpret each lens independently first; then consider convergence vs divergence
+(see Active divergence). Units match the user's dashboard export.
+
+Lens 1 — NLR × HRV  (inflammation + autonomic / training-readiness wedge)
+  Headline value:  1.6416
+  Tier:            deload
+  Data age:        33d  (staleness for blood-anchored or HRV context)
+
+Lens 2 — Sleep Regularity Index  (circadian timing consistency)
+  Score (0–100):   65
+  Tier:            irregular
+  Rolling window:  14 days
+
+Lens 3 — Aerobic decoupling trend  (pace:HR economy vs fatigue)
+  Z-score / band:  —σ
+  Tier:            unknown
+  Rolling window:  30 days
+
+## Active divergence
+
+Pattern name:  autonomic_leading_nlr_elevated
+
+What it means (from the report):
+State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload,
+readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated:
+autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded
+and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization
+has high expected leverage. Confidence: 39.2% (divergence modifiers:
+autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload;
+wearable leads blood — wait for NLR confirmation.
+
+Contributing signals:
+  • NLR×HRV: 1.64  |  Score 1.64 = (5.37/3.0) × (45.8/49.9). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging multiplier 0.85).
+  • Illness window: Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati  |  2026-01-10 – 2026-02-15
+
+## Recent context
+
+Annotated calendar windows from context_flags (overlap with last 14 days of snapshot date):
+
+- Illness: 2026-03-25 – 2026-04-22 — Demo arc — spring GI overlap / foodborne-style episode (synthetic labels); pairs with late-March CBC fixture.
+
+## The framework you should reason within
+
+Use this operational framing (not legal/medical advice — illustrative physiology layer):
+
+The three metrics view the body through different lenses:
+
+- **NLR × HRV** — inflammation + autonomic state (systemic).
+- **SRI** — circadian alignment (chronobiological).
+- **Pa:HR** — exercise-economy drift (peripheral + thermoregulatory).
+
+**Convergence rule.** All three degrading simultaneously → high-confidence reload-risk signal. The diagnostic value comes not from any one, but from agreement.
+
+**Divergence is where the platform's signal lives.** When two systems disagree, the disagreement itself is the insight.
+
+## Output format
+
+Follow this contract exactly so the response is scannable in any chat client.
+
+1) Emit **exactly 3** interventions, numbered 1–3.
+2) Sort by **impact ÷ effort** (descending): intervention #1 = best ROI.
+
+For **each** intervention, copy these labels on their own lines:
+
+**ACTION** — One sentence; actionable tomorrow without new equipment unless unavoidable.
+**WHY** — Name the lens (NLR×HRV / SRI / aerobic decoupling) and cite **which field**
+           above supports this (e.g. tier, score, z-score, divergence pattern).
+**EFFORT** — Integer **1** (trivial) through **5** (heavy lifestyle lift).
+**EXPECTED IMPACT** — Which metric moves, in **what direction**, over roughly **how long**.
+
+After item 3, add:
+
+**CLARIFYING QUESTION** — One question whose answer would materially sharpen your next pass.
+
+Do not add extra sections beyond what is listed above.

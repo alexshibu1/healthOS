@@ -17,6 +17,13 @@ export type SnapshotState =
   | "accumulating-fatigue"
   | "insufficient_data";
 
+/** Placeholder written before any pipeline run; not a dashboard tier label. */
+export interface NoDataSnapshot {
+  state: "no_data";
+}
+
+export type LoadedSnapshot = SnapshotData | NoDataSnapshot;
+
 export interface TierBadge {
   state: StateColor;
   label: string;

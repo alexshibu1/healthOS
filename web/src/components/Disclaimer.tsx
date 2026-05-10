@@ -18,6 +18,17 @@ export function Disclaimer() {
           <span aria-hidden>·</span>
           <span>set in Newsreader, IBM Plex Mono, Inter</span>
         </div>
+        <p className="mt-5 font-mono text-[11px] leading-relaxed text-ink-muted">
+          Built with ❤️ by{" "}
+          <a
+            href="https://alexshibu.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink underline decoration-paper-divider underline-offset-4 transition-colors hover:text-ink-muted hover:decoration-ink-faint"
+          >
+            Alex Shibu
+          </a>
+        </p>
       </div>
     </footer>
   );

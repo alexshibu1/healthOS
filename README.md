@@ -9,12 +9,12 @@ git clone <repo>
 cd healthOS
 pip install -r requirements.txt
 cd web && npm install && cd ..
-make demo
+make dev
 ```
 
-Open `http://localhost:5173`. The demo runs on synthetic data committed at `data/examples/alex_demo/`. Press **Ctrl+C** to stop the dev server.
+Open `http://localhost:5173`. Click **Analyze my health data** and follow the three steps (gather → LLM CSV → upload). The web UI talks to a small local API on port **8787** that saves `rawdata/universal.csv`, runs the pipeline, and refreshes `web/src/data/snapshot.json`. Press **Ctrl+C** to stop Vite and the API when running `make dev` with parallel jobs.
 
-`make demo` runs `demo-pipeline` first, which regenerates `web/src/data/snapshot.json` and `web/src/data/llm_prompt.txt` so the dashboard and LLM handoff stay in sync with the fixture pipeline.
+To regenerate the committed **demo dashboard** from `data/examples/alex_demo/` (fixture slice) instead: run `make demo-pipeline` then `cd web && npm run dev`, or use `make demo` for pipeline + install + build + dev.
 
 ⚠️ **About the demo data:** The synthetic dataset deliberately has limited HRV coverage to demonstrate the system's `insufficient_data` behavior — the headline state will read as such. Run on your own data (see below) to see the full composite.
 
@@ -49,6 +49,16 @@ flowchart LR
 ## Demo (web report)
 
 Rendered after `make demo` (ingest through `snapshot_builder`, then `npm run dev` in `web/`). The page reads `web/src/data/snapshot.json`.
+
+### Preview
+
+Sources strip (Amazfit, Strava, labs), **Month at a glance** with composite trend and daily trajectory, and **Today** with scored rationale — editorial layout in Newsreader / mono data labels:
+
+![healthOS dashboard — month at a glance and Today card](docs/readme-dashboard-preview.png)
+
+### Synthetic fixture snapshot
+
+The committed demo slice (`data/examples/alex_demo/`) often drives `insufficient_data` on the headline to illustrate guardrails; an alternate capture:
 
 ![healthOS web report (demo snapshot)](docs/readme-demo.png)
 
@@ -262,6 +272,10 @@ See [CLAUDE.md](./CLAUDE.md) for development guidelines.
 ## License
 
 MIT License — See LICENSE file for details.
+
+## Author
+
+Built with ❤️ by **[Alex Shibu](https://alexshibu.com)**.
 
 ## Not a medical device
 

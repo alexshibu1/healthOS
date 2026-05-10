@@ -1,0 +1,368 @@
+{
+  "state": "autonomic-recovery-leading",
+  "score": 68,
+  "todayDelta": {
+    "value": -1.0,
+    "unit": "pts",
+    "vs": "yesterday"
+  },
+  "subline": "State: autonomic-recovery-leading (score 68/100). Score 1.64 = (5.37/3.0) × (45.8/49.9). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging multiplier 0.85).",
+  "action": "Hold reload ramps while labs catch up — autonomic rebound already visible.",
+  "todayReasoning": "State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload, readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated: autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization has high expected leverage. Confidence: 39.2% (divergence modifiers: autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload; wearable leads blood — wait for NLR confirmation.",
+  "monthlyContext": {
+    "readiness": {
+      "score": 31.6,
+      "vsLastMonth": 29.0194,
+      "windowLabel": "Apr 2026 cohort",
+      "meaning": "This calendar month composites averaged `31.6/100`; MoM Δ `+29.02` vs prior calendar month.",
+      "reasoning": ""
+    },
+    "bioAge": {
+      "years": 24.3,
+      "chronologicalYears": 24.0,
+      "meaning": "Proxy `24.3y` vs chronological `24y` (Δ +0.3 y).",
+      "reasoning": "Additive transparent pulls enumerated in breakdown — see parquet contributors_json.",
+      "breakdown": [
+        {
+          "name": "Sleep regularity",
+          "pullYears": 0.3,
+          "weightPct": 100.0,
+          "detail": "SRI=77.0; anchor interpolation (80→0y, 70→+1y, 60→+2y, 50→+3y) gives +0.30y.",
+          "state": "rose"
+        },
+        {
+          "name": "HRV 30d trend",
+          "pullYears": -0.0,
+          "weightPct": 0.0,
+          "detail": "HRV trend z=+0.00; linear map +1σ→-0.5y, -1σ→+0.5y with ±2y cap gives -0.00y.",
+          "state": "rose"
+        },
+        {
+          "name": "Resting HR drift",
+          "pullYears": 0.0,
+          "weightPct": 0.0,
+          "detail": "RHR drift=+0.00 bpm; +5 bpm sustained for 30d→+0.5y (positive-only MVP rule) gives +0.00y.",
+          "state": "rose"
+        }
+      ]
+    }
+  },
+  "monthlyTrajectory": {
+    "month": "April 2026",
+    "days": [
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 21
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 20
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "illness-risk",
+        "score": 19
+      },
+      {
+        "state": "deload",
+        "score": 62
+      },
+      {
+        "state": "deload",
+        "score": 61
+      },
+      {
+        "state": "autonomic-recovery-leading",
+        "score": 68
+      },
+      {
+        "state": "deload",
+        "score": 62
+      },
+      {
+        "state": "deload",
+        "score": 61
+      },
+      {
+        "state": "autonomic-recovery-leading",
+        "score": 68
+      },
+      {
+        "state": "autonomic-recovery-leading",
+        "score": 69
+      },
+      {
+        "state": "autonomic-recovery-leading",
+        "score": 68
+      }
+    ],
+    "todayDayOfMonth": 30
+  },
+  "monthlyHistory": [
+    {
+      "month": "Apr 2026",
+      "score": 32
+    },
+    {
+      "month": "Mar 2026",
+      "score": 3
+    },
+    {
+      "month": "Feb 2026",
+      "score": 0
+    },
+    {
+      "month": "Jan 2026",
+      "score": 0
+    },
+    {
+      "month": "Dec 2025",
+      "score": 0
+    },
+    {
+      "month": "Nov 2025",
+      "score": 31.6
+    }
+  ],
+  "sevenDayState": [
+    "deload",
+    "autonomic-recovery-leading",
+    "deload",
+    "deload",
+    "autonomic-recovery-leading",
+    "autonomic-recovery-leading",
+    "autonomic-recovery-leading"
+  ],
+  "secondaryReadouts": [],
+  "streams": [
+    {
+      "source": "amazfit",
+      "label": "AMAZFIT",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "strava",
+      "label": "STRAVA",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "jefit",
+      "label": "JEFIT",
+      "status": "missing",
+      "synced": "unknown"
+    },
+    {
+      "source": "whoop",
+      "label": "WHOOP",
+      "status": "missing",
+      "synced": "n/a"
+    },
+    {
+      "source": "bloodwork",
+      "label": "LABS",
+      "status": "fresh",
+      "synced": "0d"
+    }
+  ],
+  "flagship": {
+    "nlrHrv": {
+      "score": 1.6416,
+      "tier": "deload",
+      "sparkline": [
+        1.8025,
+        1.7948,
+        1.862,
+        1.7085,
+        1.8563,
+        1.8191,
+        1.8368,
+        2.0038,
+        1.6298,
+        1.8866,
+        1.9417,
+        1.6675,
+        1.612,
+        1.6416
+      ],
+      "dataAgeDays": 33,
+      "delta": {
+        "value": -1.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Score 1.64 = (5.37/3.0) × (45.8/49.9). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging multiplier 0.85)."
+    },
+    "sri": {
+      "score": 65,
+      "tier": "irregular",
+      "sparkline": [
+        0.0,
+        0.0,
+        64.371,
+        61.999,
+        58.483,
+        59.238,
+        60.12,
+        61.91,
+        60.306,
+        59.462,
+        64.456,
+        63.569,
+        64.864,
+        64.88
+      ],
+      "windowDays": 14,
+      "delta": {
+        "value": -1.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "14d onset σ≈26.0 min (local)"
+    },
+    "decoupling": {
+      "zscore": 0.0,
+      "tier": "unknown",
+      "sparkline": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "windowDays": 30,
+      "delta": {
+        "value": -1.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Aerobic decoupling z unavailable — need ≥3 paced runs in-window AND 8 historical paced days (have tail=4).",
+      "displayZscore": "—σ"
+    }
+  },
+  "divergence": {
+    "triggered": true,
+    "pattern": "autonomic_leading_nlr_elevated",
+    "skillRef": "skills/health-reasoning.md §4 divergence matrix",
+    "reasoning": "State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload, readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated: autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization has high expected leverage. Confidence: 39.2% (divergence modifiers: autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload; wearable leads blood — wait for NLR confirmation.",
+    "drivers": [
+      {
+        "signal": "NLR×HRV",
+        "value": "1.64",
+        "note": "Score 1.64 = (5.37/3.0) × (45.8/49.9). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging multiplier 0.85).",
+        "state": "red"
+      },
+      {
+        "signal": "Illness window",
+        "value": "Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati",
+        "note": "2026-01-10 – 2026-02-15",
+        "state": "green"
+      }
+    ]
+  },
+  "interventions": [
+    {
+      "action": "Anchor sleep onset before 22:45",
+      "effort": 3,
+      "impact": "HIGH",
+      "category": "sleep",
+      "why": "SRI 64.88 below the 70 threshold. Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.",
+      "skillRef": "§2.2",
+      "shortcut": "⌘1"
+    },
+    {
+      "action": "Request repeat CBC before intensity blocks",
+      "effort": 2,
+      "impact": "MED",
+      "category": "training",
+      "why": "NLR 5.3684 sits at or above clinical-concern cutoff pending confirmation.",
+      "skillRef": "§1.2",
+      "shortcut": "⌘2"
+    }
+  ]
+}

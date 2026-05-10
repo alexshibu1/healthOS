@@ -1,5 +1,11 @@
+import demoSnapshotData from "./snapshot.demo.json";
 import snapshotData from "./snapshot.json";
-import type { SnapshotData, SnapshotState, StateColor } from "../types";
+import type {
+  LoadedSnapshot,
+  SnapshotData,
+  SnapshotState,
+  StateColor,
+} from "../types";
 
 const SNAPSHOT_STATES: readonly SnapshotState[] = [
   "recovered",
@@ -75,6 +81,14 @@ export function snapshotValidationErrors(snapshot: unknown): string[] {
 
   if (!isObject(snapshot)) {
     return ["snapshot: expected non-null object"];
+  }
+
+  if (snapshot.state === "no_data") {
+    const keys = Object.keys(snapshot);
+    if (keys.length !== 1 || keys[0] !== "state") {
+      errs.push('no_data snapshot must contain only "state"');
+    }
+    return errs;
   }
 
   const p = "";
@@ -503,12 +517,36 @@ export function snapshotValidationErrors(snapshot: unknown): string[] {
   return errs;
 }
 
-export function loadSnapshot(): SnapshotData {
-  const errs = snapshotValidationErrors(snapshotData);
+/** Parse API or bundled JSON into a dashboard snapshot or the ``no_data`` placeholder. */
+export function parseLoadedSnapshot(raw: unknown): LoadedSnapshot | null {
+  const errs = snapshotValidationErrors(raw);
   if (errs.length) {
+    return null;
+  }
+  return raw as LoadedSnapshot;
+}
+
+/** Bundled ``snapshot.json`` at build time — used when the local API is unreachable. */
+export function loadSnapshot(): LoadedSnapshot {
+  const parsed = parseLoadedSnapshot(snapshotData);
+  if (!parsed) {
+    const errs = snapshotValidationErrors(snapshotData);
     throw new Error(
       ["Snapshot JSON validation failed:", ...errs.map((e) => `  · ${e}`)].join("\n"),
     );
   }
-  return snapshotData as SnapshotData;
+  return parsed;
+}
+
+export function isDashboardSnapshot(s: LoadedSnapshot): s is SnapshotData {
+  return s.state !== "no_data";
+}
+
+/** Committed fixture dashboard (from ``make demo-pipeline``) for skip / demo UX. */
+export function loadDemoSnapshot(): SnapshotData | null {
+  const p = parseLoadedSnapshot(demoSnapshotData);
+  if (p && isDashboardSnapshot(p)) {
+    return p;
+  }
+  return null;
 }
