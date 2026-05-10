@@ -25,25 +25,18 @@ Age 24, sex male. Training modality: running. Primary goal: longevity.
 ## Today's reading (2026-04-30)
 
 Snapshot date:           2026-04-30
-Composite state label:    autonomic-recovery-leading
-Composite score (0–100): 68   (interpret alongside label — may be withheld)
-Model confidence:        unavailable
+Composite state label:    insufficient_data
+Composite score (0–100): 0   (interpret alongside label — may be withheld)
+Model confidence:        0.30
 
 Scorer rationale (verbatim):
-State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload,
-readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated:
-autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded
-and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization
-has high expected leverage. Confidence: 39.2% (divergence modifiers:
-autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload;
-wearable leads blood — wait for NLR confirmation.
+NLR×HRV absent — Fresh CBC differential required. Headline composite requires NLR×HRV
+(wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training
+readiness from partial lenses alone. Composite scorer confidence `0.30`. Do not extrapolate
+readiness from headline numbers yet.
 
 
-Dashboard card subline: State: autonomic-recovery-leading (score 68/100). Score 1.64 = (5.37/3.0) × (45.8/49.9).
-Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging
-multiplier 0.85).
-
-Dashboard suggested stance: Hold reload ramps while labs catch up — autonomic rebound already visible.
+Dashboard suggested stance: Defer training prescriptions until CBC + wearable baselines converge.
 
 ## Three flagship lenses
 
@@ -51,9 +44,9 @@ Interpret each lens independently first; then consider convergence vs divergence
 (see Active divergence). Units match the user's dashboard export.
 
 Lens 1 — NLR × HRV  (inflammation + autonomic / training-readiness wedge)
-  Headline value:  1.6416
-  Tier:            deload
-  Data age:        33d  (staleness for blood-anchored or HRV context)
+  Headline value:  — (wedge not numerically available)
+  Tier:            unknown
+  Data age:        330d  (staleness for blood-anchored or HRV context)
 
 Lens 2 — Sleep Regularity Index  (circadian timing consistency)
   Score (0–100):   65
@@ -67,19 +60,15 @@ Lens 3 — Aerobic decoupling trend  (pace:HR economy vs fatigue)
 
 ## Active divergence
 
-Pattern name:  autonomic_leading_nlr_elevated
+Pattern name:  insufficient_data
 
 What it means (from the report):
-State: autonomic-recovery-leading (score 68/100). Primary signal: NLR×HRV (tier=deload,
-readiness score=1.64, NLR term=1.79, HRV term=0.92). HRV improving while NLR still elevated:
-autonomic recovery may be ahead of inflammatory resolution (skill §1.2). NLR×HRV degraded
-and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization
-has high expected leverage. Confidence: 39.2% (divergence modifiers:
-autonomic_leading_nlr_elevated, lifestyle_driven_systemic_stress). Action: Hold reload;
-wearable leads blood — wait for NLR confirmation.
+Insufficient data: NLR×HRV (wedge) tier is unknown — headline composite readiness is not
+numerically interpretable. Sleep regularity and/or aerobic decoupling may still report
+bands; they do not substitute for the NLR×HRV inflammatory × autonomic wedge.
 
 Contributing signals:
-  • NLR×HRV: 1.64  |  Score 1.64 = (5.37/3.0) × (45.8/49.9). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 33d (aging multiplier 0.85).
+  • NLR×HRV: — unavailable  |  Fresh CBC differential required.
   • Illness window: Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati  |  2026-01-10 – 2026-02-15
 
 ## Recent context

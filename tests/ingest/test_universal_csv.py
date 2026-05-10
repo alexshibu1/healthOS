@@ -22,9 +22,25 @@ def test_full_row_all_columns_observation_count(tmp_path: Path) -> None:
     p = _write(tmp_path, csv_text)
     obs, rej = load(p, rawdata_root=tmp_path)
     assert not rej
-    # hr, rhr, activity_steps, blood_glucose, body_weight, sleep_summary,
+    # hrv, rhr, activity_steps, blood_glucose, body_weight, sleep_summary,
     # workout_session + 4 components, blood_panel_draw + 3 analytes
     assert len(obs) == 15
+    hrv_obs = [o for o in obs if o.metric_kind == "hrv"]
+    assert len(hrv_obs) == 1
+    assert hrv_obs[0].value_numeric == pytest.approx(45)
+
+
+def test_hrv_ms_emits_metric_kind_hrv_not_hr(tmp_path: Path) -> None:
+    """Regression: NLR×HRV scorer filters metric_kind == hrv (see nlr_hrv_readiness)."""
+    csv_text = """date,hrv_ms
+2026-05-09,48
+"""
+    p = _write(tmp_path, csv_text)
+    obs, rej = load(p, rawdata_root=tmp_path)
+    assert not rej
+    assert len(obs) == 1
+    assert obs[0].metric_kind == "hrv"
+    assert obs[0].value_unit == "ms"
 
 
 def test_blank_cbc_no_blood_panel_draw(tmp_path: Path) -> None:

@@ -1,4 +1,11 @@
-import { type ChangeEvent, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import extractionPrompt from "../data/extraction_prompt.txt?raw";
 
 type Step = 1 | 2 | 3;
@@ -9,6 +16,11 @@ interface UploadDialogProps {
   apiBase: string;
   /** Skip the CSV flow and load the committed demo dashboard snapshot. */
   onSkipDemo?: () => void;
+}
+
+function looksLikeCsv(file: File): boolean {
+  const n = file.name.toLowerCase();
+  return n.endsWith(".csv") || file.type === "text/csv" || file.type === "application/csv";
 }
 
 export function UploadDialog({
@@ -22,6 +34,8 @@ export function UploadDialog({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -30,6 +44,7 @@ export function UploadDialog({
       setUploading(false);
       setError(null);
       setFileLabel(null);
+      setDragActive(false);
     }
   }, [open]);
 
@@ -43,41 +58,89 @@ export function UploadDialog({
     }
   }
 
-  async function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+  const uploadFile = useCallback(
+    async (file: File) => {
+      if (!looksLikeCsv(file)) {
+        setError("Please choose a .csv file.");
+        return;
+      }
+      setError(null);
+      setFileLabel(file.name);
+      setUploading(true);
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const uploadUrl = `${apiBase.replace(/\/$/, "")}/upload`;
+
+      try {
+        const res = await fetch(uploadUrl, {
+          method: "POST",
+          body: fd,
+        });
+
+        let body: { status?: string; error?: string };
+        try {
+          body = (await res.json()) as { status?: string; error?: string };
+        } catch {
+          setError(
+            `Server returned ${res.status} with a non-JSON body. Is the API healthy? (${uploadUrl})`,
+          );
+          setUploading(false);
+          return;
+        }
+
+        if (!res.ok || body.error) {
+          setError(body.error ?? `Upload failed (HTTP ${res.status}).`);
+          setUploading(false);
+          return;
+        }
+        if (body.status === "ok") {
+          window.location.reload();
+          return;
+        }
+        setError("Unexpected response from server.");
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Could not reach the API.";
+        const hint =
+          msg === "Failed to fetch"
+            ? ` Could not connect to ${uploadUrl}. Start the API: run \`make dev\` or \`PYTHONPATH=. uvicorn src.api.app:app --port 8787\` from the repo root.`
+            : "";
+        setError(`${msg}.${hint}`);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [apiBase],
+  );
+
+  function onFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(null);
-    setFileLabel(file.name);
-    setUploading(true);
+    void uploadFile(file);
+    e.target.value = "";
+  }
 
-    const fd = new FormData();
-    fd.append("file", file);
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  }
 
-    try {
-      const res = await fetch(`${apiBase}/upload`, {
-        method: "POST",
-        body: fd,
-      });
-      const body = (await res.json()) as { status?: string; error?: string };
-      if (!res.ok || body.error) {
-        setError(body.error ?? `Upload failed (${res.status})`);
-        setUploading(false);
-        return;
-      }
-      if (body.status === "ok") {
-        window.location.reload();
-        return;
-      }
-      setError("Unexpected response from server.");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Network error — is the API running on port 8787?",
-      );
-    } finally {
-      setUploading(false);
-    }
+  function onDragLeave(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    void uploadFile(file);
   }
 
   if (!open) return null;
@@ -186,19 +249,39 @@ export function UploadDialog({
                 Upload your CSV
               </h2>
               <p className="text-sm leading-relaxed text-ink-muted">
-                Upload the CSV your LLM generated. We&apos;ll analyze it and show your
-                personalized health dashboard.
+                Drop your file here or click to browse. The local API on port{" "}
+                <span className="font-mono text-ink-muted">8787</span> ingests it and runs the
+                pipeline.
               </p>
-              <label className="block">
-                <span className="sr-only">Choose CSV file</span>
-                <input
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="block w-full border border-paper-divider bg-paper px-3 py-2 font-mono text-[11px] file:mr-4 file:border-0 file:bg-transparent file:font-mono file:text-[11px] file:uppercase file:tracking-[0.18em]"
-                  disabled={uploading}
-                  onChange={(e) => void onFileChange(e)}
-                />
-              </label>
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="sr-only"
+                disabled={uploading}
+                onChange={onFileChange}
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onDragEnter={onDragOver}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                onClick={() => inputRef.current?.click()}
+                className={`flex min-h-[140px] w-full flex-col items-center justify-center gap-2 border border-dashed px-4 py-8 text-center transition ${
+                  dragActive
+                    ? "border-ink bg-paper/90"
+                    : "border-paper-divider bg-paper/40 hover:border-ink/25 hover:bg-paper/60"
+                } ${uploading ? "pointer-events-none opacity-60" : "cursor-pointer"}`}
+              >
+                <span className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-ink">
+                  Drag & drop CSV here
+                </span>
+                <span className="font-mono text-[10px] text-ink-subtle">
+                  or click to choose a file
+                </span>
+              </button>
               {fileLabel && (
                 <p className="font-mono text-[11px] text-ink-muted">
                   {fileLabel}
@@ -214,7 +297,7 @@ export function UploadDialog({
                 </p>
               )}
               {error && (
-                <p className="border border-state-rose/40 bg-state-rose-soft px-3 py-2 font-mono text-[11px] text-state-rose-ink">
+                <p className="whitespace-pre-wrap border border-state-rose/40 bg-state-rose-soft px-3 py-2 font-mono text-[11px] text-state-rose-ink">
                   {error}
                 </p>
               )}

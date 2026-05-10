@@ -1,1 +1,412 @@
-{"state":"no_data"}
+{
+  "state": "insufficient_data",
+  "score": 0,
+  "todayDelta": {
+    "value": 0.0,
+    "unit": "pts",
+    "vs": "yesterday"
+  },
+  "subline": "NLR×HRV absent — Fresh CBC differential required. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone.",
+  "action": "Defer training prescriptions until CBC + wearable baselines converge.",
+  "todayReasoning": "NLR×HRV absent — Fresh CBC differential required. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone. Composite scorer confidence `0.30`. Do not extrapolate readiness from headline numbers yet.",
+  "monthlyContext": {
+    "readiness": {
+      "score": 0.0,
+      "vsLastMonth": -52.7742,
+      "windowLabel": "Apr 2026 cohort",
+      "meaning": "This calendar month composites averaged `0.0/100`; MoM Δ `-52.77` vs prior calendar month.",
+      "reasoning": ""
+    },
+    "bioAge": {
+      "years": 24.3,
+      "chronologicalYears": 24.0,
+      "meaning": "Proxy `24.3y` vs chronological `24y` (Δ +0.3 y).",
+      "reasoning": "Additive transparent pulls enumerated in breakdown — see parquet contributors_json.",
+      "breakdown": [
+        {
+          "name": "Sleep regularity",
+          "pullYears": 0.3,
+          "weightPct": 100.0,
+          "detail": "SRI=77.0; anchor interpolation (80→0y, 70→+1y, 60→+2y, 50→+3y) gives +0.30y.",
+          "state": "rose"
+        },
+        {
+          "name": "HRV 30d trend",
+          "pullYears": -0.0,
+          "weightPct": 0.0,
+          "detail": "HRV trend z=+0.00; linear map +1σ→-0.5y, -1σ→+0.5y with ±2y cap gives -0.00y.",
+          "state": "rose"
+        },
+        {
+          "name": "Resting HR drift",
+          "pullYears": 0.0,
+          "weightPct": 0.0,
+          "detail": "RHR drift=+0.00 bpm; +5 bpm sustained for 30d→+0.5y (positive-only MVP rule) gives +0.00y.",
+          "state": "rose"
+        }
+      ]
+    }
+  },
+  "monthlyTrajectory": {
+    "month": "April 2026",
+    "days": [
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      },
+      {
+        "state": "insufficient_data",
+        "score": 0
+      }
+    ],
+    "todayDayOfMonth": 30
+  },
+  "monthlyHistory": [
+    {
+      "month": "Apr 2026",
+      "score": 0
+    },
+    {
+      "month": "Mar 2026",
+      "score": 53
+    },
+    {
+      "month": "Feb 2026",
+      "score": 40
+    },
+    {
+      "month": "Jan 2026",
+      "score": 12
+    },
+    {
+      "month": "Dec 2025",
+      "score": 0
+    },
+    {
+      "month": "Nov 2025",
+      "score": 0
+    }
+  ],
+  "sevenDayState": [
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data",
+    "insufficient_data"
+  ],
+  "secondaryReadouts": [],
+  "streams": [
+    {
+      "source": "amazfit",
+      "label": "AMAZFIT",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "strava",
+      "label": "STRAVA",
+      "status": "fresh",
+      "synced": "0d"
+    },
+    {
+      "source": "jefit",
+      "label": "JEFIT",
+      "status": "missing",
+      "synced": "unknown"
+    },
+    {
+      "source": "whoop",
+      "label": "WHOOP",
+      "status": "missing",
+      "synced": "n/a"
+    },
+    {
+      "source": "bloodwork",
+      "label": "LABS",
+      "status": "fresh",
+      "synced": "0d"
+    }
+  ],
+  "flagship": {
+    "nlrHrv": {
+      "score": 0.0,
+      "tier": "unknown",
+      "sparkline": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dataAgeDays": 330,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Fresh CBC differential required.",
+      "displayScore": "—"
+    },
+    "sri": {
+      "score": 65,
+      "tier": "irregular",
+      "sparkline": [
+        0.0,
+        0.0,
+        64.371,
+        61.999,
+        58.483,
+        59.238,
+        60.12,
+        61.91,
+        60.306,
+        59.462,
+        64.456,
+        63.569,
+        64.864,
+        64.88
+      ],
+      "windowDays": 14,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "(no narrative row)",
+      "displayScore": "—"
+    },
+    "decoupling": {
+      "zscore": 0.0,
+      "tier": "unknown",
+      "sparkline": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "windowDays": 30,
+      "delta": {
+        "value": 0.0,
+        "unit": "pts",
+        "vs": "yesterday"
+      },
+      "reasoning": "Aerobic decoupling z unavailable — need ≥3 paced runs in-window AND 8 historical paced days (have tail=9).",
+      "displayZscore": "—σ"
+    }
+  },
+  "divergence": {
+    "triggered": true,
+    "pattern": "insufficient_data",
+    "skillRef": "skills/health-reasoning.md §4 divergence matrix",
+    "reasoning": "Insufficient data: NLR×HRV (wedge) tier is unknown — headline composite readiness is not numerically interpretable. Sleep regularity and/or aerobic decoupling may still report bands; they do not substitute for the NLR×HRV inflammatory × autonomic wedge.",
+    "drivers": [
+      {
+        "signal": "NLR×HRV",
+        "value": "— unavailable",
+        "note": "Fresh CBC differential required.",
+        "state": "amber"
+      },
+      {
+        "signal": "Illness window",
+        "value": "Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati",
+        "note": "2026-01-10 – 2026-02-15",
+        "state": "green"
+      }
+    ],
+    "question": {
+      "prompt": "Insufficient-data gate — missing: CBC availability / staleness messaging; NLR×HRV wedge unknown — fused headline withheld (see refusal reasoning); Aerobic decoupling. Which explanation best matches?",
+      "options": [
+        {
+          "id": "fresh_cbc",
+          "label": "Fresh CBC differential landed.",
+          "response": {
+            "headline": "Queue blood panel ingest → rebuild nlr_hrv + composite parquets.",
+            "confidenceTransition": "",
+            "actions": [
+              "Ingest CBC",
+              "Re-run parquet writers"
+            ]
+          }
+        },
+        {
+          "id": "wearable_backfill",
+          "label": "Wearable CSV back-filled for HRV dates.",
+          "response": {
+            "headline": "Backfilled HEARTRATE_AUTO restores baseline counting window.",
+            "confidenceTransition": "",
+            "actions": [
+              "load_all ingest",
+              "nlr_hrv.score_range"
+            ]
+          }
+        },
+        {
+          "id": "planned_break",
+          "label": "Intentional deload unrelated to telemetry gaps.",
+          "response": {
+            "headline": "Annotate deliberate rest/travel windows in context_flags.yaml.",
+            "confidenceTransition": "",
+            "actions": [
+              "Edit YAML windows",
+              "Re-run composite"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "interventions": [
+    {
+      "action": "Zero optional sessions for 48h",
+      "effort": 4,
+      "impact": "HIGH",
+      "category": "training",
+      "why": "Composite 0.0 below 55 — prioritize recovery primitives.",
+      "skillRef": "composite-spec §3",
+      "shortcut": "⌘1"
+    },
+    {
+      "action": "Anchor sleep onset before 22:45",
+      "effort": 3,
+      "impact": "HIGH",
+      "category": "sleep",
+      "why": "SRI 64.88 below the 70 threshold. Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.",
+      "skillRef": "§2.2",
+      "shortcut": "⌘2"
+    }
+  ],
+  "todayScoreDisplay": "—"
+}

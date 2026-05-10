@@ -23,6 +23,7 @@ _METRIC_ANALYTE = "blood_panel_analyte"
 
 _CONF: dict[str, float] = {
     "hr": 0.60,
+    "hrv": 0.60,
     "rhr": 0.70,
     "sleep_summary": 0.65,
     "activity_steps": 0.75,
@@ -145,7 +146,8 @@ def load(
 
             # ── scalars (daily anchor midnight local → UTC) ─────────────────
             for cell_key, metric, unit, conf_key in (
-                ("hrv_ms", "hr", "ms", "hr"),
+                # Must be ``hrv`` (not ``hr``) so NLR×HRV scorer picks it up — see ``nlr_hrv_readiness.HRV_METRIC_KIND``.
+                ("hrv_ms", "hrv", "ms", "hrv"),
                 ("rhr_bpm", "rhr", "bpm", "rhr"),
                 ("steps", "activity_steps", "count", "activity_steps"),
                 ("glucose_mmol", "blood_glucose", "mmol/L", "blood_glucose"),

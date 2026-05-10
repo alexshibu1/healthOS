@@ -15,7 +15,7 @@ Headers are matched **case-insensitively** after trimming ASCII whitespace; cano
 | Column | Required | Blank handling | `metric_kind` / behavior |
 |--------|----------|----------------|---------------------------|
 | `date` | **yes** | empty → **Reject** row (`missing_date`) | Anchor for all observations from this row (ISO `YYYY-MM-DD` unless noted below). |
-| `hrv_ms` | no | blank → skip | `hr`, `value_unit` = `ms`, `source_confidence` = **0.60** (per ladder: generic wearable RMSSD proxy mapped into HR channel). |
+| `hrv_ms` | no | blank → skip | `hrv`, `value_unit` = `ms`, `source_confidence` = **0.60** (aligned with Amazfit HRV proxy; feeds NLR×HRV baseline). |
 | `rhr_bpm` | no | blank → skip | `rhr`, `value_unit` = `bpm`, confidence **0.70**. |
 | `sleep_onset` | no | blank → skip sleep block | Start of sleep interval (see §Sleep). |
 | `sleep_offset` | no | blank → skip sleep block | End of sleep interval. |

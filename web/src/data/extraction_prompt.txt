@@ -81,3 +81,5 @@ MINIMAL EXAMPLE HEADER (trim to the subset you actually populate)
 date,hrv_ms,rhr_bpm,sleep_onset,sleep_offset,sleep_hours,steps,weight_kg,workout_type,workout_distance_m,workout_moving_time_s,workout_avg_hr,workout_avg_pace_s_per_km,neutrophils_abs,lymphocytes_abs,monocytes_abs,glucose_mmol,notes
 
 Then emit data rows until all user-supplied days are covered.
+
+(If you are editing locally: a blank starter with this exact header and empty metric cells is at ``rawdata/universal.template.csv`` in the healthOS repo — copy/rename to ``rawdata/universal.csv`` or paste your LLM output over it.)
