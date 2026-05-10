@@ -1,26 +1,26 @@
 {
-  "state": "insufficient_data",
-  "score": 0,
+  "state": "deload",
+  "score": 62,
   "todayDelta": {
     "value": 0.0,
     "unit": "pts",
     "vs": "yesterday"
   },
-  "subline": "NLR×HRV absent — Insufficient wake HRV history for baseline window. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone.",
-  "action": "Defer training prescriptions until CBC + wearable baselines converge.",
-  "todayReasoning": "NLR×HRV absent — Insufficient wake HRV history for baseline window. Headline composite requires NLR×HRV (wedge); SRI / aerobic readouts below are supportive only — do not infer a 0–100 training readiness from partial lenses alone. Composite scorer confidence `0.30`. Do not extrapolate readiness from headline numbers yet.",
+  "subline": "State: deload (score 62/100). Score 1.82 = (5.37/3.0) × (48.5/47.8). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 119d (stale multiplier 0.70). HRV today missing: 3-day median substituted (spec §4.4). Laboratory anchor 119d old.",
+  "action": "Cap session intensity and truncate volume blocks until physiology normalizes.",
+  "todayReasoning": "State: deload (score 62/100). Primary signal: NLR×HRV (tier=deload, readiness score=1.82, NLR term=1.79, HRV term=1.02). NLR×HRV degraded and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization has high expected leverage. Confidence: 49.5% (divergence modifiers: lifestyle_driven_systemic_stress). Action: Cap volume; no high-intensity sessions.",
   "monthlyContext": {
     "readiness": {
-      "score": 0.0,
-      "vsLastMonth": 0.0,
-      "windowLabel": "Apr 2026 cohort",
-      "meaning": "This calendar month composites averaged `0.0/100`; MoM Δ `+0.00` vs prior calendar month.",
+      "score": 63.3,
+      "vsLastMonth": -1.8,
+      "windowLabel": "May 2026 cohort",
+      "meaning": "This calendar month composites averaged `63.3/100`; MoM Δ `-1.80` vs prior calendar month.",
       "reasoning": ""
     },
     "bioAge": {
       "years": 24.3,
-      "chronologicalYears": 24.0,
-      "meaning": "Proxy `24.30y` vs chronological `24.00y` (Δ +0.30 y).",
+      "chronologicalYears": 21.0,
+      "meaning": "Proxy `24.3y` vs chronological `21y` (Δ +3.3 y).",
       "reasoning": "Additive transparent pulls enumerated in breakdown — see parquet contributors_json.",
       "breakdown": [
         {
@@ -48,39 +48,43 @@
     }
   },
   "monthlyTrajectory": {
-    "month": "April 2026",
+    "month": "May 2026",
     "days": [
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "autonomic-recovery-leading",
+        "score": 68
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 63
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "autonomic-recovery-leading",
+        "score": 67
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 62
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 62
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 62
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 62
       },
       {
-        "state": "insufficient_data",
-        "score": 0
+        "state": "deload",
+        "score": 62
+      },
+      {
+        "state": "deload",
+        "score": 62
       },
       {
         "state": "insufficient_data",
@@ -171,44 +175,69 @@
         "score": 0
       }
     ],
-    "todayDayOfMonth": 30
+    "todayDayOfMonth": 9
   },
   "monthlyHistory": [
     {
+      "month": "May 2026",
+      "score": 63
+    },
+    {
       "month": "Apr 2026",
-      "score": 0
+      "score": 65
     },
     {
       "month": "Mar 2026",
-      "score": 0
+      "score": 66
     },
     {
       "month": "Feb 2026",
-      "score": 0
+      "score": 64
     },
     {
       "month": "Jan 2026",
-      "score": 0
+      "score": 28
     },
     {
       "month": "Dec 2025",
-      "score": 0
-    },
-    {
-      "month": "Nov 2025",
-      "score": 0
+      "score": 63.3
     }
   ],
   "sevenDayState": [
-    "insufficient_data",
-    "insufficient_data",
-    "insufficient_data",
-    "insufficient_data",
-    "insufficient_data",
-    "insufficient_data",
-    "insufficient_data"
+    "autonomic-recovery-leading",
+    "deload",
+    "deload",
+    "deload",
+    "deload",
+    "deload",
+    "deload"
   ],
-  "secondaryReadouts": [],
+  "secondaryReadouts": [
+    {
+      "label": "Bio-age · Sleep regularity",
+      "value": "+0.3 yrs",
+      "note": "share of summed |Δ| magnitude (see breakdown)",
+      "state": "rose"
+    },
+    {
+      "label": "Bio-age · HRV 30d trend",
+      "value": "-0.0 yrs",
+      "note": "share of summed |Δ| magnitude (see breakdown)",
+      "state": "rose"
+    },
+    {
+      "label": "Bio-age gap",
+      "value": "+3.3 yrs",
+      "note": "proxy vs chronological baseline",
+      "state": "red"
+    },
+    {
+      "label": "Trend file",
+      "value": "(absent)",
+      "note": "Today's composite `62.0`; run trends writer for richer scan lines.",
+      "state": "amber"
+    }
+  ],
   "streams": [
     {
       "source": "amazfit",
@@ -243,51 +272,50 @@
   ],
   "flagship": {
     "nlrHrv": {
-      "score": 0.0,
-      "tier": "unknown",
+      "score": 1.8171,
+      "tier": "deload",
       "sparkline": [
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0
+        1.8866,
+        1.9417,
+        1.6675,
+        1.612,
+        1.6416,
+        1.663,
+        1.812,
+        1.7383,
+        1.8591,
+        1.8347,
+        1.8231,
+        1.8171,
+        1.8171,
+        1.8171
       ],
-      "dataAgeDays": 330,
+      "dataAgeDays": 119,
       "delta": {
         "value": 0.0,
         "unit": "pts",
         "vs": "yesterday"
       },
-      "reasoning": "Insufficient wake HRV history for baseline window.",
-      "displayScore": "—"
+      "reasoning": "Score 1.82 = (5.37/3.0) × (48.5/47.8). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 119d (stale multiplier 0.70). HRV today missing: 3-day median substituted (spec §4.4)."
     },
     "sri": {
-      "score": 65,
+      "score": 60,
       "tier": "irregular",
       "sparkline": [
-        0.0,
-        0.0,
-        64.371,
-        61.999,
-        58.483,
-        59.238,
-        60.12,
-        61.91,
-        60.306,
         59.462,
         64.456,
         63.569,
         64.864,
-        64.88
+        64.88,
+        62.365,
+        64.318,
+        60.462,
+        62.413,
+        65.334,
+        61.614,
+        60.542,
+        60.019,
+        60.364
       ],
       "windowDays": 14,
       "delta": {
@@ -295,8 +323,7 @@
         "unit": "pts",
         "vs": "yesterday"
       },
-      "reasoning": "(no narrative row)",
-      "displayScore": "—"
+      "reasoning": "14d onset σ≈29.4 min (local)"
     },
     "decoupling": {
       "zscore": 0.0,
@@ -329,84 +356,75 @@
   },
   "divergence": {
     "triggered": true,
-    "pattern": "insufficient_data",
+    "pattern": "lifestyle_driven_systemic_stress",
     "skillRef": "skills/health-reasoning.md §4 divergence matrix",
-    "reasoning": "Insufficient data: NLR×HRV (wedge) tier is unknown — headline composite readiness is not numerically interpretable. CBC anchor metadata: 110 days since draw. Sleep regularity and/or aerobic decoupling may still report bands; they do not substitute for the NLR×HRV inflammatory × autonomic wedge.",
+    "reasoning": "State: deload (score 62/100). Primary signal: NLR×HRV (tier=deload, readiness score=1.82, NLR term=1.79, HRV term=1.02). NLR×HRV degraded and sleep regularity low: lifestyle-driven systemic stress pattern; circadian regularization has high expected leverage. Confidence: 49.5% (divergence modifiers: lifestyle_driven_systemic_stress). Action: Cap volume; no high-intensity sessions.",
     "drivers": [
       {
         "signal": "NLR×HRV",
-        "value": "— unavailable",
-        "note": "Insufficient wake HRV history for baseline window.",
-        "state": "amber"
+        "value": "1.82",
+        "note": "Score 1.82 = (5.37/3.0) × (48.5/47.8). Tier: deload. NLR elevated: abs neutrophils 10.2, abs lymphocytes 1.9. CBC age: 119d (stale multiplier 0.70). HRV today missing: 3-day median substituted (spec §4.4).",
+        "state": "red"
       },
       {
         "signal": "Illness window",
-        "value": "Demo arc — respiratory illness / pneumonia scare & recovery (Jan–Feb 2026); informs interpretati",
-        "note": "2026-01-10 – 2026-02-15",
+        "value": "food poisoning (Oct 2025 summary panel; no differential available)",
+        "note": "2025-06-08 – 2025-06-29",
         "state": "green"
       }
-    ],
-    "question": {
-      "prompt": "Insufficient-data gate — missing: Wake HRV baseline window; NLR×HRV wedge unknown — fused headline withheld (see refusal reasoning); Aerobic decoupling. Which explanation best matches?",
-      "options": [
-        {
-          "id": "fresh_cbc",
-          "label": "Fresh CBC differential landed.",
-          "response": {
-            "headline": "Queue blood panel ingest → rebuild nlr_hrv + composite parquets.",
-            "confidenceTransition": "",
-            "actions": [
-              "Ingest CBC",
-              "Re-run parquet writers"
-            ]
-          }
-        },
-        {
-          "id": "wearable_backfill",
-          "label": "Wearable CSV back-filled for HRV dates.",
-          "response": {
-            "headline": "Backfilled HEARTRATE_AUTO restores baseline counting window.",
-            "confidenceTransition": "",
-            "actions": [
-              "load_all ingest",
-              "nlr_hrv.score_range"
-            ]
-          }
-        },
-        {
-          "id": "planned_break",
-          "label": "Intentional deload unrelated to telemetry gaps.",
-          "response": {
-            "headline": "Annotate deliberate rest/travel windows in context_flags.yaml.",
-            "confidenceTransition": "",
-            "actions": [
-              "Edit YAML windows",
-              "Re-run composite"
-            ]
-          }
-        }
-      ]
-    }
+    ]
   },
   "interventions": [
     {
-      "action": "Zero optional sessions for 48h",
-      "effort": 4,
-      "impact": "HIGH",
-      "category": "training",
-      "why": "Composite 0.0 below 55 — prioritize recovery primitives.",
-      "skillRef": "composite-spec §3",
-      "shortcut": "⌘1"
-    },
-    {
-      "action": "Anchor sleep onset before {target_time}",
+      "action": "Anchor sleep onset before 22:45",
       "effort": 3,
       "impact": "HIGH",
       "category": "sleep",
-      "why": "SRI 64.88 below the 70 threshold. Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.",
+      "why": "SRI 60.4 below the 70 threshold. Windred 2024 (n=60,977) found SRI <70 associated with 20–48% higher all-cause mortality.",
       "skillRef": "§2.2",
-      "shortcut": "⌘2"
+      "shortcut": "⌘1",
+      "projectedComposite": {
+        "value": "+2 pts",
+        "on": "May-9 cohort"
+      },
+      "projectedBioAge": {
+        "value": "-0.2 yrs",
+        "on": "bio-age gap"
+      }
+    },
+    {
+      "action": "Focus on sleep regularity stack (onset + variance)",
+      "effort": 3,
+      "impact": "HIGH",
+      "category": "sleep",
+      "why": "Bio-age gap 3.3y suggests sleep regularity is dragging the proxy.",
+      "skillRef": "bio-age-spec §2",
+      "shortcut": "⌘2",
+      "projectedComposite": {
+        "value": "+2 pts",
+        "on": "May-9 cohort"
+      },
+      "projectedBioAge": {
+        "value": "-0.2 yrs",
+        "on": "bio-age gap"
+      }
+    },
+    {
+      "action": "Request repeat CBC before intensity blocks",
+      "effort": 2,
+      "impact": "MED",
+      "category": "recovery",
+      "why": "NLR 3.0 sits at or above clinical-concern cutoff pending confirmation.",
+      "skillRef": "§1.2",
+      "shortcut": "⌘3",
+      "projectedComposite": {
+        "value": "+1 pt",
+        "on": "May-9 cohort"
+      },
+      "projectedBioAge": {
+        "value": "-0.2 yrs",
+        "on": "bio-age gap"
+      }
     }
-  ],
-  "todayScoreDisplay": "—"
+  ]
 }

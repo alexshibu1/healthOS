@@ -346,7 +346,7 @@ def _bio_breakdown(contrib_blob: Any) -> list[dict[str, Any]]:
     return rows
 
 
-def _fallback_secondary(bio_row: Mapping[str, Any], comp_score_for_note: float) -> list[dict[str, Any]]:
+def _fallback_secondary(bio_row: Mapping[str, Any], comp_score_for_note: float, chron_years: float = 0.0) -> list[dict[str, Any]]:
     """
     Fallback when ``data/trends/<YYYY-MM>.json`` absent:
 
@@ -370,13 +370,24 @@ def _fallback_secondary(bio_row: Mapping[str, Any], comp_score_for_note: float) 
                 "note": "share of summed |Δ| magnitude (see breakdown)",
                 "state": c["state"],
             })
-    gy = bio_row.get("gap_years")
-    if gy is not None and pd.notna(gy):
+    # Use proxy_age - chron_years as the real gap (gap_years parquet column may
+    # reflect a different chronological age than the current profile.yaml).
+    proxy_age = bio_row.get("proxy_age")
+    if proxy_age is not None and pd.notna(proxy_age) and chron_years:
+        real_gap = float(proxy_age) - chron_years
         out.append({
             "label": "Bio-age gap",
-            "value": f"{float(gy):+.1f} yrs",
+            "value": f"{real_gap:+.1f} yrs",
             "note": "proxy vs chronological baseline",
-            "state": _state_color("bio_pull", float(gy)),
+            "state": _state_color("bio_pull", real_gap),
+        })
+    elif bio_row.get("gap_years") is not None and pd.notna(bio_row.get("gap_years")):
+        gy = float(bio_row["gap_years"])
+        out.append({
+            "label": "Bio-age gap",
+            "value": f"{gy:+.1f} yrs",
+            "note": "proxy vs chronological baseline",
+            "state": _state_color("bio_pull", gy),
         })
 
     out.append({
@@ -821,6 +832,10 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
 
     trends_fp = _trends_dir(rr) / f"{y:04d}-{mo:02d}.json"
 
+    # Load profile early so chron_years is available for bio-age gap calculations below.
+    profile = load_profile_yaml(rr)
+    chron_years = float(profile.get("age"))
+
     readiness_extra = ""
     if trends_fp.is_file():
         blob = json.loads(trends_fp.read_text(encoding="utf-8"))
@@ -829,11 +844,11 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
             top = blob["trends_ranked_by_effect_size"][0]
             readiness_extra = f" Leading MoM mover `{top['key']}` Cohen's d≈{top.get('cohens_d')}."
     else:
-        secondary = _fallback_secondary(bio_sr.to_dict(), sc_now)
+        secondary = _fallback_secondary(bio_sr.to_dict(), sc_now, chron_years=chron_years)
 
     month_mean_primary = mont_cur if mont_cur == mont_cur else sc_now
     readiness = {
-        "score": round(float(month_mean_primary), 4),
+        "score": round(float(month_mean_primary), 1),
         "vsLastMonth": vs_lm,
         "windowLabel": f"{calendar.month_abbr[mo]} {y} cohort",
         "meaning": (
@@ -848,20 +863,18 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
     parity_target = readiness["score"]
     if hist and round(float(hist[-1]["score"]) - float(parity_target), 6) != 0.0:
 
-        hist[-1]["score"] = round(float(parity_target), 4)
-
-    profile = load_profile_yaml(rr)
-
-    chron_years = float(profile.get("age"))
+        hist[-1]["score"] = round(float(parity_target), 1)
 
     breakdown = _bio_breakdown(bio_sr["contributors_json"])
 
+    _proxy_age_val = float(bio_sr["proxy_age"])
+    _real_gap = round(_proxy_age_val - chron_years, 1)
     bio_age_blob = {
-        "years": float(bio_sr["proxy_age"]),
+        "years": _proxy_age_val,
         "chronologicalYears": chron_years,
         "meaning": (
-            f"Proxy `{float(bio_sr['proxy_age']):.2f}y` vs chronological `{chron_years:.2f}y` "
-            f"(Δ {float(bio_sr['gap_years']):+.2f} y)."
+            f"Proxy `{_proxy_age_val:.1f}y` vs chronological `{chron_years:.0f}y` "
+            f"(Δ {_real_gap:+.1f} y)."
         ),
         "reasoning": "Additive transparent pulls enumerated in breakdown — see parquet contributors_json.",
         "breakdown": breakdown,
@@ -966,11 +979,13 @@ def build_snapshot(score_date: date, *, repo_root: Path | None = None) -> dict[s
     }
 
     mo_abbr = calendar.month_abbr[score_date.month]
+    _sri_score_float = float(sri_score_raw) if pd.notna(sri_score_raw) else 0.0
     env_intervention: MutableMapping[str, Any] = {
         "state": composite_state,
         "readiness_score": round(sc_now, 6),
-        "sri_score": float(sri_score_raw) if pd.notna(sri_score_raw) else 0.0,
-        "gap_years": float(bio_sr.get("gap_years") or 0),
+        "sri_score": _sri_score_float,
+        "sri_value": round(_sri_score_float, 1),   # template alias used in lookup.yaml why_templates
+        "gap_years": _real_gap,                    # real proxy_age - chron_years gap
         "nlr_value": _nlr_numeric_for_rules(nlr_d.get("score"), rn),
         "illness_active": get_active_flags(score_date)["illness"],
         "target_time": "22:45",

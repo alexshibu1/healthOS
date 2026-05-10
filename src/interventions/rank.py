@@ -127,9 +127,11 @@ def rank_interventions(
     for rule in matched[:limit]:
         tmpl = str(rule.get("why_template", ""))
         why = tmpl.format_map(_SafeFormat(snapshot))
+        action_tmpl = str(rule.get("action", ""))
+        action = action_tmpl.format_map(_SafeFormat(snapshot))
         out.append(
             {
-                "action": rule.get("action", ""),
+                "action": action,
                 "skill_ref": rule.get("skill_ref", ""),
                 "effort": int(rule.get("effort") or 0),
                 "impact": str(rule.get("impact", "")),
