@@ -64,7 +64,11 @@ export function useHealthBootstrap(): {
   }, []);
 
   useEffect(() => {
-    void bootstrap();
+    // Schedule so the effect body does not invoke bootstrap synchronously (react-hooks/set-state-in-effect).
+    const id = window.setTimeout(() => {
+      void bootstrap();
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [bootstrap]);
 
   return { mode, snapshot };

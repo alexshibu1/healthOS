@@ -272,7 +272,7 @@ function HeroGlance({
   );
 }
 
-interface InlineGlanceProps extends GlanceCommonProps {}
+type InlineGlanceProps = GlanceCommonProps;
 
 function InlineGlance({
   label,

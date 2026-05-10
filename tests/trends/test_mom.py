@@ -23,27 +23,28 @@ def _write_csv(df: pd.DataFrame, tmp_path: Path) -> Path:
 
 def test_ranked_sorted_by_abs_cohens_d(tmp_path: Path):
     rows = []
-    # March — lower HRV / readiness vs April — deliberately separated means.
+    # March — lower HRV / readiness vs April — separated means; enough intra-month
+    # variance avoids scipy moment warnings from near-duplicate samples.
     for d in range(1, 21):
         rows.append(
             {
                 "date": f"2026-03-{d:02d}",
-                "wake_hrv_ms": 42 + (d % 3),
-                "wake_rhr_bpm": 58,
-                "readiness_score": 55,
-                "sri_score": 72,
-                "strava_cardio_strain": 40 + (d % 5),
+                "wake_hrv_ms": 38 + d * 0.35 + (d % 4),
+                "wake_rhr_bpm": 56 + (d % 3),
+                "readiness_score": 52 + (d % 7),
+                "sri_score": 68 + (d % 5),
+                "strava_cardio_strain": 36 + d * 0.4 + (d % 5),
             }
         )
     for d in range(1, 21):
         rows.append(
             {
                 "date": f"2026-04-{d:02d}",
-                "wake_hrv_ms": 56 + (d % 3),
-                "wake_rhr_bpm": 59,
-                "readiness_score": 67,
-                "sri_score": 78,
-                "strava_cardio_strain": 48 + (d % 5),
+                "wake_hrv_ms": 52 + d * 0.35 + (d % 4),
+                "wake_rhr_bpm": 58 + (d % 3),
+                "readiness_score": 64 + (d % 7),
+                "sri_score": 76 + (d % 5),
+                "strava_cardio_strain": 44 + d * 0.4 + (d % 5),
             }
         )
     csv_path = _write_csv(pd.DataFrame(rows), tmp_path)

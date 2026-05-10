@@ -2,7 +2,6 @@ import {
   type ChangeEvent,
   type DragEvent,
   useCallback,
-  useEffect,
   useRef,
   useState,
 } from "react";
@@ -37,16 +36,19 @@ export function UploadDialog({
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!open) {
-      setStep(1);
-      setCopyDone(false);
-      setUploading(false);
-      setError(null);
-      setFileLabel(null);
-      setDragActive(false);
-    }
-  }, [open]);
+  const resetWizard = useCallback(() => {
+    setStep(1);
+    setCopyDone(false);
+    setUploading(false);
+    setError(null);
+    setFileLabel(null);
+    setDragActive(false);
+  }, []);
+
+  const closeDialog = useCallback(() => {
+    resetWizard();
+    onOpenChange(false);
+  }, [onOpenChange, resetWizard]);
 
   async function copyPrompt() {
     try {
@@ -149,7 +151,7 @@ export function UploadDialog({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/25 p-4 backdrop-blur-[2px]"
       role="presentation"
-      onClick={() => onOpenChange(false)}
+      onClick={closeDialog}
     >
       <div
         role="dialog"
@@ -311,7 +313,7 @@ export function UploadDialog({
               type="button"
               onClick={() => {
                 onSkipDemo();
-                onOpenChange(false);
+                closeDialog();
               }}
               className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted underline decoration-paper-divider underline-offset-4 hover:text-ink"
             >
@@ -322,7 +324,7 @@ export function UploadDialog({
           )}
           <button
             type="button"
-            onClick={() => onOpenChange(false)}
+            onClick={closeDialog}
             className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-subtle hover:text-ink"
           >
             Close
