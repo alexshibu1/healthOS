@@ -1,3 +1,5 @@
+import { GITHUB_REPO_URL, PAGES_SITE_URL } from "../lib/publicSite";
+
 interface LandingProps {
   onOpenUpload: () => void;
   /** Skip CSV upload and show the committed demo fixture dashboard. */
@@ -19,6 +21,29 @@ export function Landing({ onOpenUpload, onUseDemo }: LandingProps) {
           Personal health intelligence layer — ingests messy multi-source health data
           (Zepp/Amazfit, JeFit, Strava, blood panels) and produces monthly reports with a
           composite readiness score, bio-age proxy, and ranked top-3 interventions.
+        </p>
+
+        <p className="mt-8 text-sm leading-relaxed text-ink-muted">
+          <span className="text-ink">This screen</span> runs the full pipeline on your machine (local
+          API + Python scorers). For a no-install, prompt-only walkthrough, use the{" "}
+          <a
+            href={PAGES_SITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink underline decoration-paper-divider underline-offset-4 hover:text-ink-muted"
+          >
+            GitHub Pages site
+          </a>
+          . Source and issues:{" "}
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink underline decoration-paper-divider underline-offset-4 hover:text-ink-muted"
+          >
+            GitHub repo
+          </a>
+          .
         </p>
 
         <button

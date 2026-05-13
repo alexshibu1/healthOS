@@ -1,0 +1,360 @@
+:root {
+  --ink: #16140f;
+  --ink-muted: #4a463d;
+  --ink-faint: #8a8478;
+  --paper: #faf8f4;
+  --paper-tinted: #f3f0e8;
+  --divider: #e6e1d6;
+  --rose: #8b3a3a;
+  --rose-soft: #f5e8e8;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink-muted);
+  background: var(--paper);
+  line-height: 1.55;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--ink-muted);
+}
+
+.wrap {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  border-bottom: 1px solid var(--divider);
+  padding-bottom: 1.75rem;
+}
+
+.brand span.light {
+  font-weight: 300;
+  color: var(--ink-muted);
+}
+
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 2rem 0 0.75rem;
+  line-height: 1.25;
+}
+
+.lede {
+  font-size: 1.05rem;
+  margin-top: 1.25rem;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+ul.flags {
+  margin: 1rem 0 0;
+  padding-left: 1.15rem;
+}
+
+ul.flags li {
+  margin-bottom: 0.35rem;
+}
+
+.actions {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.btn:hover {
+  opacity: 0.92;
+}
+
+.btn.secondary {
+  background: transparent;
+  color: var(--ink-muted);
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.links-row {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.links-row a {
+  color: var(--ink-muted);
+}
+
+.links-row a:hover {
+  color: var(--ink);
+}
+
+.disclaimer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--divider);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--divider);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(22, 20, 15, 0.22);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 32rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--paper-tinted);
+  border: 1px solid var(--divider);
+  box-shadow: 0 24px 48px -12px rgba(22, 20, 15, 0.18);
+}
+
+.modal-head {
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--divider);
+}
+
+.modal-body {
+  padding: 1.5rem 1.25rem;
+}
+
+.modal-body > * + * {
+  margin-top: 1rem;
+}
+
+.modal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--divider);
+}
+
+.modal h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.steps {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+
+.steps .current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.steps .done {
+  color: var(--ink-muted);
+}
+
+pre.prompt-preview {
+  max-height: 200px;
+  overflow: auto;
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.62rem;
+  line-height: 1.45;
+  background: rgba(250, 248, 244, 0.85);
+  border: 1px solid var(--divider);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dropzone {
+  min-height: 140px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--divider);
+  background: rgba(250, 248, 244, 0.45);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+}
+
+.dropzone:hover,
+.dropzone.drag {
+  border-color: var(--ink-muted);
+  background: rgba(250, 248, 244, 0.9);
+}
+
+.dropzone:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.err {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--rose);
+  background: var(--rose-soft);
+  border: 1px solid rgba(139, 58, 58, 0.35);
+  white-space: pre-wrap;
+}
+
+.btn-inline {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.btn-inline.secondary {
+  background: transparent;
+  color: var(--ink-muted);
+  border-color: var(--divider);
+}
+
+.link-quiet {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-quiet:hover {
+  color: var(--ink-muted);
+}
+
+.llm-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.llm-links a {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

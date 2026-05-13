@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>healthOS — personal health intelligence</title>
+    <!--
+      GitHub Pages setup (once per repo):
+      1. Push these files on branch `main` under folder `/docs`.
+      2. GitHub → Settings → Pages → Build and deployment → Source: Deploy from a branch.
+      3. Branch: `main`, folder: `/docs`, Save.
+      4. Site URL is usually https://<owner>.github.io/<repo>/ — set meta pages-site-url to match.
+    -->
+    <meta name="github-repo" content="alexshibu1/healthOS" />
+    <meta name="github-branch" content="main" />
+    <meta name="pages-site-url" content="https://alexshibu1.github.io/healthOS/" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="brand">
+        health<span class="light">OS</span>
+      </header>
+
+      <p class="lede muted">
+        Personal health intelligence layer — ingests messy multi-source health data (Zepp/Amazfit,
+        JeFit, Strava, blood panels) and produces monthly-style reports with a composite readiness
+        score, bio-age proxy, and ranked interventions when you run the
+        <strong class="muted" style="color: var(--ink)">full local pipeline</strong>.
+      </p>
+
+      <h1>Two ways to use it</h1>
+      <p class="small muted">
+        <strong>Here (browser, no install):</strong> walk through gathering data, copy prompts for
+        your own LLM, and paste a CSV for a quick qualitative read. No data is sent to healthOS;
+        anything you paste goes only where you paste it.
+      </p>
+      <p class="small muted" style="margin-top: 0.75rem">
+        <strong>Locally (full pipeline):</strong> clone the repo, run the Python ingest + scorers
+        and the Vite dashboard — that is where NLR×HRV, SRI, aerobic decoupling, composite, bio-age,
+        and intervention ranking are computed from transparent formulas.
+      </p>
+
+      <h1 style="margin-top: 2rem">The wedge</h1>
+      <p class="small muted">
+        No single consumer app sees all of this at once. healthOS is built to fuse wearables,
+        workouts, and blood differentials into one calendar so you can reason about recovery and
+        load together — not as medical advice, but as a structured personal report.
+      </p>
+
+      <h1 style="margin-top: 2rem">Three flagship metrics (local pipeline)</h1>
+      <ul class="flags small muted">
+        <li><strong style="color: var(--ink)">NLR × HRV</strong> training-readiness (labs + autonomic)</li>
+        <li><strong style="color: var(--ink)">Sleep Regularity Index</strong> (Phillips-style consistency)</li>
+        <li><strong style="color: var(--ink)">Aerobic decoupling</strong> trend (pace/HR)</li>
+      </ul>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btn-try">Try it — prompt walkthrough</button>
+        <a class="btn secondary" href="https://github.com/alexshibu1/healthOS">View on GitHub</a>
+      </div>
+
+      <p class="disclaimer">
+        Not medical advice. Bio-age and scores are illustrative; talk to a clinician for decisions
+        about treatment or diagnosis.
+      </p>
+
+      <footer>
+        <span class="mono">Pages</span>
+        —
+        <span id="footer-pages-url">https://alexshibu1.github.io/healthOS/</span>
+        <br />
+        <span class="mono">Source</span>
+        —
+        <a href="https://github.com/alexshibu1/healthOS">github.com/alexshibu1/healthOS</a>
+      </footer>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-root" class="hidden" aria-hidden="true">
+      <div class="modal-backdrop" role="presentation" id="modal-backdrop">
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          id="modal-panel"
+        >
+          <div class="modal-head">
+            <p id="modal-title" class="mono" style="margin: 0; color: var(--ink-faint)">Get started</p>
+            <div class="steps" style="margin-top: 0.65rem" id="step-indicator" aria-live="polite">
+              <span data-step="1" class="current">1</span>
+              <span>—</span>
+              <span data-step="2">2</span>
+              <span>—</span>
+              <span data-step="3">3</span>
+            </div>
+          </div>
+          <div class="modal-body" id="modal-body"></div>
+          <div class="modal-foot">
+            <button type="button" class="link-quiet" id="modal-close">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="try.js" defer></script>
+  </body>
+</html>

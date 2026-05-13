@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import extractionPrompt from "../data/extraction_prompt.txt?raw";
+import { GITHUB_REPO_URL, PAGES_SITE_URL } from "../lib/publicSite";
 
 type Step = 1 | 2 | 3;
 
@@ -107,7 +108,7 @@ export function UploadDialog({
           err instanceof Error ? err.message : "Could not reach the API.";
         const hint =
           msg === "Failed to fetch"
-            ? ` Could not connect to ${uploadUrl}. Start the API: run \`make dev\` or \`PYTHONPATH=. uvicorn src.api.app:app --port 8787\` from the repo root.`
+            ? ` Could not connect to ${uploadUrl}. Start the API: run \`make dev\` or \`PYTHONPATH=. uvicorn src.api.app:app --port 8787\` from the repo root. Repo: ${GITHUB_REPO_URL}`
             : "";
         setError(`${msg}.${hint}`);
       } finally {
@@ -201,6 +202,27 @@ export function UploadDialog({
                 Works with: Apple Health, Garmin, WHOOP, Oura, Strava, blood panels, anything
                 you can screenshot or export.
               </p>
+              <p className="text-sm leading-relaxed text-ink-muted">
+                Sharing with someone without this stack? Point them to the{" "}
+                <a
+                  href={PAGES_SITE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink underline decoration-paper-divider underline-offset-4 hover:text-ink-muted"
+                >
+                  browser walkthrough
+                </a>{" "}
+                (copy prompts only) or the{" "}
+                <a
+                  href={GITHUB_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink underline decoration-paper-divider underline-offset-4 hover:text-ink-muted"
+                >
+                  GitHub repo
+                </a>{" "}
+                to clone and run the full pipeline.
+              </p>
               <button
                 type="button"
                 onClick={() => setStep(2)}
@@ -253,7 +275,17 @@ export function UploadDialog({
               <p className="text-sm leading-relaxed text-ink-muted">
                 Drop your file here or click to browse. The local API on port{" "}
                 <span className="font-mono text-ink-muted">8787</span> ingests it and runs the
-                pipeline.
+                pipeline. For defendable NLR×HRV, SRI, decoupling, composite, bio-age, and ranked
+                interventions, this local path is the source of truth — the{" "}
+                <a
+                  href={PAGES_SITE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink underline decoration-paper-divider underline-offset-4 hover:text-ink-muted"
+                >
+                  Pages walkthrough
+                </a>{" "}
+                is prompt-only.
               </p>
               <input
                 ref={inputRef}
